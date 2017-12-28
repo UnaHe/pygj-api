@@ -44,4 +44,79 @@ class UserController extends Controller
         return $this->ajaxSuccess($data);
     }
 
+    /**
+     * 完善资料
+     * @param Request $request
+     * @return static
+    */
+    public function setUserInfo(Request $request){
+        // 获得用户信息.
+        $userId = $request->user()->id;
+        $data = $request->all();
+
+        // 判断字段.
+        if(!$data['actual_name'] || !$data['wechat_id'] || !$data['taobao_id']){
+            return $this->ajaxError("参数错误");
+        }
+
+        // 执行更新数据.
+        try{
+            (new UserService())->setUserInfo($userId, $data);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess();
+    }
+
+    /**
+     * 密码验证
+     * @param Request $request
+     * @return static
+     */
+    public function pwdValida(Request $request){
+        // 获得用户密码.
+        $userId = $request->user()->id;
+        $password = $request->input('password');
+
+        if(strlen($password) < 6){
+            return $this->ajaxError('密码不正确');
+        }
+
+        // 执行密码验证.
+        try{
+            (new UserService())->pwdValida($userId, $password);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess();
+
+    }
+
+    /**
+     * 朋友搜索
+     * @param Request $request
+     * @return static
+     */
+    public function querFriend(Request $request){
+        // 关键字.
+        $userId = $request->user()->id;
+        $keyword = $request->input('keyword');
+
+        if(!$keyword){
+            return $this->ajaxError("参数错误");
+        }
+
+        // 搜索.
+        try{
+            $data = (new UserService())->querFriend($userId, $keyword);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
+
+    }
+
 }
