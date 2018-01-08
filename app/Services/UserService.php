@@ -181,6 +181,12 @@ class UserService{
 
         // 符合条件的学员.
         $users = $query->get()->toArray();
+        $remarks = new FriendRemark();
+        foreach ($users as &$user){
+            $user['type'] = 1;
+            $user['type_desc'] = "会员";
+            $user['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $user['id']])->pluck('remark')->first();
+        }
 
         //我使用的邀请码
         $inviteCode = User::where("id", $userId)->pluck('invite_code')->first();
@@ -194,8 +200,8 @@ class UserService{
                     ->where(function($query) use($keyword){
                     $query->where('phone', 'like', "%$keyword%")
                         ->orwhere('wechat_id', 'like', "%$keyword%");
-                })->first()->toArray();
-
+                })->first();
+                $masterUser['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $masterUserId])->pluck('remark')->first();
                 array_push($users, $masterUser);
             }
         }

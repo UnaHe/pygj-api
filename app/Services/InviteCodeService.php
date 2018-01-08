@@ -154,7 +154,7 @@ class InviteCodeService{
     }
 
     /**
-     * 转VIP
+     * 续费
      * @param $userId
      * @param $phone
      * @param $type
