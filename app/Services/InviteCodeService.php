@@ -11,6 +11,8 @@ use App\Models\InviteCode;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Message;
+use App\Models\Order;
+use App\Models\CodePrice;
 
 class InviteCodeService{
     /**
@@ -54,40 +56,48 @@ class InviteCodeService{
         try{
             // 我的用户信息.
             $user = User::where("id", $userId)->first();
-            $wechat_id = $user['wechat_id'];
-            $phone = $user['phone'];
+//            $grade = $user['grade'] ? : 1;
 
-            // 师傅的用户id.
-            $masterUserId = InviteCode::where(['invite_code' => $user['invite_code']])->pluck('user_id')->first();
+            // 邀请码价格.
+//            $price = json_decode((new SysConfigService())->get('invite_code_price'), true);
 
+            // 生成订单字段.
             switch ($types){
                 case -1:
-                    $types = 'VIP';
+                    $subtype = 14;
+                    $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                     break;
                 case 30:
-                    $types = '月付';
+                    $subtype = 11;
+                    $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                     break;
                 case 90:
-                    $types = '季付';
+                    $subtype = 12;
+                    $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                     break;
                 case 365:
-                    $types = '年付';
+                    $subtype = 13;
+                    $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                     break;
             }
 
-            // 生成消息字段.
-            $title = '申请通知';
-            $content = '学员 '.$wechat_id.'('.$phone.')'.'向您申请: '.$num.'个'.$types.'学员位.';
             $type = 1;
-            $from_user_id = $userId;
-            $to_user_id = $masterUserId;
+            $user_phone  = $user['phone'];
+            $user_name = $user['actual_name'];
+            $total_price = $unit_price * $num;
+            $status = 1;
 
-            $res = Message::create([
-                'title' => $title,
-                'content' => $content,
+            // 创建申请订单.
+            $res = Order::create([
                 'type' => $type,
-                'from_user_id' => $from_user_id,
-                'to_user_id' => $to_user_id,
+                'subtype' => $subtype,
+                'number' => $num,
+                'user_id' => $userId,
+                'user_phone' => $user_phone,
+                'user_name' => $user_name,
+                'unit_price' => $unit_price,
+                'total_price' => $total_price,
+                'status' => $status,
             ]);
 
             if(!$res){
@@ -113,7 +123,7 @@ class InviteCodeService{
         $data =  InviteCode::where([
             'user_id' => $userId,
             'status' => InviteCode::STATUS_UNUSE
-        ])->select(['effective_days', DB::raw('count(*) as num')])->groupBy('effective_days')->get();
+        ])->select(['effective_days', DB::raw('GROUP_CONCAT(invite_code)as list, count(*) as num')])->groupBy('effective_days')->get();
 
         // 计算邀请码级别.
         foreach ($data as $k=>$v){
@@ -165,72 +175,114 @@ class InviteCodeService{
         try{
             $users = new User();
             $InviteCode = new InviteCode();
-            // 验证用户信息.
-            $obj = $users->where("phone", $phone)->first();
-            if(!$obj){
+
+            // 用户信息.
+            $member = $users->where('phone', $phone)->first();
+
+            if(!$member){
                 throw new \LogicException('用户不存在');
             }
+            $member_id = $member['id'];
+            $memberCode = $member['invite_code'];
 
-            $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
-                'invite.user_id' => $userId,
-                'invite.status' => InviteCode::STATUS_USED
-            ]);
-            $query->leftjoin($users->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
-            $query->select("user.id");
+            // 是否自己续费.
+            if(!$member_id == $userId){
+                $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
+                    'invite.user_id' => $userId,
+                    'invite.status' => InviteCode::STATUS_USED
+                ]);
+                $query->leftjoin($users->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
+                $query->select("user.id");
 
-            //我的学员
-            $members = $query->get()->toArray();
-            foreach($members as $k=>$v){
-                foreach($v as $key=>$val){
-                    $new_arr[] = $val;
+                //我的学员
+                $members = $query->get()->toArray();
+                foreach($members as $k=>$v){
+                    foreach($v as $key=>$val){
+                        $new_arr[] = $val;
+                    }
+                }
+                if(!in_array($member_id, $new_arr)){
+                    throw new \LogicException('申请用户不是您的学员');
                 }
             }
-            $member = in_array($obj['id'], $new_arr);
-            if(!$member){
-                throw new \LogicException('申请用户不是您的学员');
-            }
 
-            // 申请用户当前会员类型.
-            $userType =  $InviteCode->where(['invite_code' => $obj['invite_code']])->pluck('effective_days')->first();
+            // 当前邀请码级别.
+            $memberType = $InviteCode->where(['invite_code' => $memberCode])->pluck('effective_days')->first();
 
-            if($userType == '-1'){
+            if($memberType == '-1'){
                 throw new \LogicException('用户已经是VIP');
             }
 
-            // 计算邀请码级别.
-            switch ($types){
+            // 生成订单字段.
+            switch ($memberType){
                 case 30:
-                    $types = '个月';
+                    switch ($types){
+                        case 30:
+                            $subtype = 21;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                        case 90:
+                            $subtype = 22;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                        case 365:
+                            $subtype = 23;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                    }
                     break;
                 case 90:
-                    $types = '个季度';
+                    switch ($types){
+                        case 30:
+                            $subtype = 24;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                        case 90:
+                            $subtype = 25;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                        case 365:
+                            $subtype = 26;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                    }
                     break;
                 case 365:
-                    $types = '年';
+                    switch ($types){
+                        case 30:
+                            $subtype = 27;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                        case 90:
+                            $subtype = 28;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                        case 365:
+                            $subtype = 29;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                    }
                     break;
             }
 
-            // 我的用户信息.
-            $user = $users->where("id", $userId)->first();
-            $wechat_id = $user['wechat_id'];
-            $user_phone = $user['phone'];
+            $type = 2;
+            $member_phone  = $member['phone'];
+            $member_name = $member['actual_name'];
+            $total_price = $unit_price * $num;
+            $status = 1;
 
-            // 师傅的用户id.
-            $masterUserId = $InviteCode->where(['invite_code' => $user['invite_code']])->pluck('user_id')->first();
-
-            // 生成消息字段.
-            $title = '申请通知';
-            $content = '学员 '.$wechat_id.'('.$user_phone.')向您申请: 申请类型: 续费 - '.$num.$types.'需要变更的学员号码: '.$phone;
-            $type = 1;
-            $from_user_id = $userId;
-            $to_user_id = $masterUserId;
-
-            $res = Message::create([
-                'title' => $title,
-                'content' => $content,
+            // 创建续费订单.
+            $res = Order::create([
                 'type' => $type,
-                'from_user_id' => $from_user_id,
-                'to_user_id' => $to_user_id,
+                'subtype' => $subtype,
+                'number' => $num,
+                'user_id' => $member_id,
+                'user_phone' => $member_phone,
+                'user_name' => $member_name,
+                'unit_price' => $unit_price,
+                'total_price' => $total_price,
+                'status' => $status,
+                'remark' => $memberCode,
             ]);
 
             if(!$res){
@@ -247,91 +299,78 @@ class InviteCodeService{
     }
 
     /**
-     * 转VIP
+     * 升级VIP
      * @param $userId
      * @param $phone
      * @throws \Exception
      */
-    public function turnVip($userId, $phone){
+    public function turnVip($userId, $newCode){
         try{
-            $users = new User();
-            $InviteCode = new InviteCode();
-            // 验证用户信息.
-            $obj = $users->where("phone", $phone)->first();
-            if(!$obj){
-                throw new \LogicException('用户不存在');
+            // 验证邀请码有效性.
+            $isCode = InviteCode::where([
+                'invite_code' => $newCode,
+                'effective_days' => -1,
+                'status' => InviteCode::STATUS_UNUSE
+            ])->first();
+
+            if(!$isCode){
+                throw new \LogicException('邀请码错误');
             }
 
-            $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
-                'invite.user_id' => $userId,
-                'invite.status' => InviteCode::STATUS_USED
-            ]);
-            $query->leftjoin($users->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
-            $query->select("user.id");
+            // 我的用户信息.
+            $user = User::where('id', $userId)->first();
+            $userCode = $user['invite_code'];
 
-            //我的学员
-            $members = $query->get()->toArray();
-            foreach($members as $k=>$v){
-                foreach($v as $key=>$val){
-                    $new_arr[] = $val;
-                }
-            }
-            $member = in_array($obj['id'], $new_arr);
-            if(!$member){
-                throw new \LogicException('申请用户不是您的学员');
-            }
-
-            // 申请用户当前会员类型.
-            $userType =  $InviteCode->where(['invite_code' => $obj['invite_code']])->pluck('effective_days')->first();
+            // 当前邀请码级别.
+            $userType = InviteCode::where([
+                'invite_code' => $userCode
+            ])->pluck('effective_days')->first();
 
             if($userType == '-1'){
                 throw new \LogicException('用户已经是VIP');
             }
 
-            // 计算邀请码级别.
+            // 生成订单字段.
             switch ($userType){
                 case 30:
-                    $userType = '月';
+                    $subtype = 31;
                     break;
                 case 90:
-                    $userType = '季';
+                    $subtype = 32;
                     break;
                 case 365:
-                    $userType = '年';
+                    $subtype = 33;
                     break;
             }
+            $type = 3;
+            $number = 1;
+            $user_phone  = $user['phone'];
+            $user_name = $user['actual_name'];
+            $unit_price = CodePrice::where(['duration' => '-1'])->pluck('code_price')->first();
+            $status = 1;
 
-            // 我的用户信息.
-            $user = $users->where("id", $userId)->first();
-            $wechat_id = $user['wechat_id'];
-            $user_phone = $user['phone'];
-
-            // 师傅的用户id.
-            $masterUserId = $InviteCode->where(['invite_code' => $user['invite_code']])->pluck('user_id')->first();
-
-            // 生成消息字段.
-            $title = '申请通知';
-            $content = '学员 '.$wechat_id.'('.$user_phone.')向您申请: 申请类型: '.$userType.'转vip 需要变更的学员号码: '.$phone;
-            $type = 1;
-            $from_user_id = $userId;
-            $to_user_id = $masterUserId;
-
-            $res = Message::create([
-                'title' => $title,
-                'content' => $content,
+            // 创建升级订单.
+            $res = Order::create([
                 'type' => $type,
-                'from_user_id' => $from_user_id,
-                'to_user_id' => $to_user_id,
+                'subtype' => $subtype,
+                'number' => $number,
+                'user_id' => $userId,
+                'user_phone' => $user_phone,
+                'user_name' => $user_name,
+                'unit_price' => $unit_price,
+                'total_price' => $unit_price,
+                'status' => $status,
+                'remark' => $newCode,
             ]);
 
             if(!$res){
-                throw new \LogicException('申请转vip失败');
+                throw new \LogicException('升级VIP失败');
             }
         }catch (\Exception $e){
             if($e instanceof \LogicException){
                 $error = $e->getMessage();
             }else{
-                $error = '申请转vip失败';
+                $error = '升级VIP失败';
             }
             throw new \Exception($error);
         }

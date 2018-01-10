@@ -28,33 +28,26 @@ class UserService{
         }
 
         $user = User::where("id", $userId)->first();
-        //账户等级
+        // 账户等级.
         $grade = $user['grade'] ? : 1;
         $gradeConfig = UserLevelConfig::where("id", $grade)->first();
         if(!$gradeConfig){
             Log::error("用户等级{$grade}未配置");
             throw new \Exception("系统错误");
         }
+        // 升级需要数量.
         $gradeDesc = $gradeConfig['name'];
+        $upgradeNeedNum = $user['upgrade'] ? : 12;
+
+        // 升级等级.
+        $upgradeGrade = ($grade + 1) <= 3 ? $grade + 1 : 3;
+        $upgrade = UserLevelConfig::where("id", $upgradeGrade)->first();
+
         $data = [
             'grade' => $gradeDesc,
+            'upgrade_need_num' => $upgradeNeedNum,
+            'upgrade_to_grade' => $upgrade['name']
         ];
-
-        $query = InviteCode::from((new InviteCode())->getTable()." as invite")->where([
-            'invite.user_id' => $userId,
-            'invite.status' => InviteCode::STATUS_USED
-        ]);
-
-        //和自己同级别或比自己级别大的直属学员
-        $userCount = $query->leftjoin((new User())->getTable()." as user", "user.invite_code", '=', "invite.invite_code")
-            ->where('user.grade', ">=", $grade)
-            ->count();
-
-        //升级所需直属学员数量
-        $upgradeNeedNum = $gradeConfig['upgrade'] - $userCount;
-        $upgradeNeedNum = $upgradeNeedNum <= 0 ? 0 : $upgradeNeedNum;
-        $data['upgrade_need_num'] = $upgradeNeedNum;
-        $data['upgrade_need_grade'] = $gradeDesc;
 
         CacheHelper::setCache($data, 2);
         return $data;
@@ -123,6 +116,30 @@ class UserService{
                 $error = $e->getMessage();
             }else{
                 $error = '信息存储失败';
+            }
+            throw new \Exception($error);
+        }
+    }
+
+    /**
+     * 获取用户资料
+     * @param $userid
+     * @return array
+     * @throws \Exception
+     */
+    public function getUserInfo($userId){
+        try{
+            // 查询用户.
+            $user = User::find($userId);
+            if(!$user){
+                throw new \LogicException("用户不存在");
+            }
+            return $user;
+        }catch (\Exception $e){
+            if($e instanceof \LogicException){
+                $error = $e->getMessage();
+            }else{
+                $error = '用户不存在';
             }
             throw new \Exception($error);
         }

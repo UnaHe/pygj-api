@@ -51,6 +51,11 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::post('/setUserInfo', "UserController@setUserInfo");
 
         /**
+         * 获取用户资料
+         */
+        Route::get('/getUserInfo', "UserController@getUserInfo");
+
+        /**
          * 密码验证
          */
         Route::post('/pwdValida', "UserController@pwdValida");
@@ -76,7 +81,7 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::post('/invideCode/renewFee', "InviteCodeController@renewFee");
 
         /**
-         * 转VIP
+         * 升级VIP
          */
         Route::post('/invideCode/turnVip', "InviteCodeController@turnVip");
 
@@ -109,6 +114,18 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
          * 获取未读消息数量
          */
         Route::get('/messages/unReadNum', "MessageController@unReadNum");
+
+        /**
+         * 今日收益
+         */
+
+        /**
+         * 提现申请
+         */
+
+        /**
+         * 获取学员招募记录
+         */
 
     });
 

@@ -39,8 +39,8 @@ class InviteCodeController extends Controller
         $types = $request->input('types');
         $num = $request->input('codenum');
 
-        if(!preg_match('/^[1-9]\d?$/', $num)){
-            return $this->ajaxError('数量应该为1-99');
+        if(!preg_match('/^[1-9]\d?\d?$/', $num)){
+            return $this->ajaxError('数量应该为1-999');
         }
 
         if(!preg_match('/^-1|30|90|365$/', $types)){
@@ -101,8 +101,8 @@ class InviteCodeController extends Controller
         if(!preg_match('/^30|90|365$/', $types)){
             return $this->ajaxError('请输入正确的续费类型');
         }
-        if(!preg_match('/^[1-9]\d?$/', $num)){
-            return $this->ajaxError('数量应该为1-99');
+        if(!preg_match('/^[1-9]\d?\d?$/', $num)){
+            return $this->ajaxError('数量应该为1-999');
         }
         if($types == 30 && $num > 2){
             return $this->ajaxError('推荐选择更优惠的季付套餐');
@@ -122,20 +122,20 @@ class InviteCodeController extends Controller
     }
 
     /**
-     * 转VIP
+     * 升级VIP
      * @param Request $request
      * @return static
      */
     public function turnVip(Request $request){
         $userId = $request->user()->id;
-        $phone = $request->input('phone');
+        $newCode = $request->input('new_code');
 
-        if(!preg_match('/^1\d{10}$/', $phone)){
-            return $this->ajaxError('请输入正确的手机号码');
+        if(preg_match('/^\w{1,6}$/', $newCode)){
+            return $this->ajaxError('参数错误');
         }
 
         try{
-            (new InviteCodeService())->turnVip($userId, $phone);
+            (new InviteCodeService())->turnVip($userId, $newCode);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }

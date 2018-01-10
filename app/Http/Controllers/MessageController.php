@@ -17,15 +17,18 @@ class MessageController extends Controller
         $title = $request->input('title');
         $content = $request->input('content');
         $type = $request->input('type');
+        $subtype = $request->input('subtype');
+        $quantity = $request->input('quantity');
+        $change_phone = $request->input('change_phone');
         $from_user_id = $request->input('from_user_id');
         $to_user_id = $request->input('to_user_id');
 
-        if(!$title || !$content || !$type || !$from_user_id == 0 || !$to_user_id == 0){
+        if(!$title || !$content || !$type < 0 || !$subtype < 0  || !$quantity < 0 || !preg_match('/^1\d{10}$/', $change_phone) || !$from_user_id < 0 || !$to_user_id < 0){
             return $this->ajaxError("参数错误");
         }
 
         try{
-            (new MessageService())->setMessage($title, $content, $type, $from_user_id, $to_user_id);
+            (new MessageService())->setMessage($title, $content, $type, $subtype, $quantity, $change_phone, $from_user_id, $to_user_id);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }

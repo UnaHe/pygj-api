@@ -55,7 +55,7 @@ class UserController extends Controller
         $data = $request->all();
 
         // 判断字段.
-        if(!$data['actual_name'] || !$data['wechat_id'] || !$data['taobao_id']){
+        if(!$data['actual_name'] || !$data['wechat_id'] || !$data['taobao_id'] || !$data['alipay_id']){
             return $this->ajaxError("参数错误");
         }
 
@@ -67,6 +67,21 @@ class UserController extends Controller
         }
 
         return $this->ajaxSuccess();
+    }
+
+    /**
+     * 获取用户资料
+     * @param Request $request
+     * @return static
+     */
+    public function getUserInfo(Request $request){
+        $userId = $request->user()->id;
+        try{
+            $data = (new UserService())->getUserInfo($userId);
+        }catch (\Exception $e){
+            $this->ajaxError("系统错误");
+        }
+        return $this->ajaxSuccess($data);
     }
 
     /**

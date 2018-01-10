@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * 朋友备注
- * Class FriendRemark
+ * 订单表
+ * Class Order
  * @package App\Models
  */
-class FriendRemark extends Model
+class Order extends Model
 {
-    protected $table = "xmt_pygj_friend_remark";
+    protected $table = "xmt_pygj_order";
     protected $guarded = ['id'];
 }

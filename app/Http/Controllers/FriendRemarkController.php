@@ -7,6 +7,11 @@ use App\Services\FriendRemarkService;
 
 class FriendRemarkController extends Controller
 {
+    /**
+     * 设置备注
+     * @param Request $request
+     * @return static
+     */
     public function setRemark(Request $request){
         // 获取信息.
         $userId = $request->user()->id;

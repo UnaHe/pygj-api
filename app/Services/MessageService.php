@@ -11,17 +11,23 @@ class MessageService{
      * @param $title
      * @param $content
      * @param $type
+     * @param $subtype
+     * @param $quantity
+     * @param $change_phone
      * @param $from_user_id
      * @param $to_user_id
      * @throws \Exception
      */
-    public function setMessage($title, $content, $type, $from_user_id, $to_user_id){
+    public function setMessage($title, $content, $type, $subtype, $quantity, $change_phone, $from_user_id, $to_user_id){
         try{
             // 创建消息
             $isSuccess = Message::create([
                 'title' => $title,
                 'content' => $content,
                 'type' => $type,
+                'subtype' => $subtype,
+                'quantity' => $quantity,
+                'change_phone' => $change_phone,
                 'from_user_id' => $from_user_id,
                 'to_user_id' => $to_user_id,
             ]);
