@@ -83,7 +83,7 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 升级VIP
          */
-        Route::post('/invideCode/turnVip', "InviteCodeController@turnVip");
+        Route::post('/invideCode/upVip', "InviteCodeController@upVip");
 
         /**
          * 获取学员位申请记录

@@ -35,8 +35,11 @@ class UserService{
             Log::error("用户等级{$grade}未配置");
             throw new \Exception("系统错误");
         }
-        // 升级需要数量.
+        // 当前等级.
         $gradeDesc = $gradeConfig['name'];
+        $gradePic = 'http://'.config('domains.pygj_domains').$gradeConfig['grede_pic'];
+        $isTop = $gradeConfig['is_top'];
+        // 升级需要数量.
         $upgradeNeedNum = $user['upgrade'] ? : 12;
 
         // 升级等级.
@@ -46,7 +49,9 @@ class UserService{
         $data = [
             'grade' => $gradeDesc,
             'upgrade_need_num' => $upgradeNeedNum,
-            'upgrade_to_grade' => $upgrade['name']
+            'upgrade_to_grade' => $upgrade['name'],
+            'grade_pic' => $gradePic,
+            'is_top' => $isTop
         ];
 
         CacheHelper::setCache($data, 2);

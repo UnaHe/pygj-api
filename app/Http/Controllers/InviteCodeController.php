@@ -126,7 +126,7 @@ class InviteCodeController extends Controller
      * @param Request $request
      * @return static
      */
-    public function turnVip(Request $request){
+    public function upVip(Request $request){
         $userId = $request->user()->id;
         $newCode = $request->input('new_code');
 
@@ -135,7 +135,7 @@ class InviteCodeController extends Controller
         }
 
         try{
-            (new InviteCodeService())->turnVip($userId, $newCode);
+            (new InviteCodeService())->upVip($userId, $newCode);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }

@@ -81,7 +81,7 @@ class InviteCodeService{
                     break;
             }
 
-            $type = 1;
+            $type = Order::ORDER_APPLY;
             $user_phone  = $user['phone'];
             $user_name = $user['actual_name'];
             $total_price = $unit_price * $num;
@@ -92,6 +92,7 @@ class InviteCodeService{
                 'type' => $type,
                 'subtype' => $subtype,
                 'number' => $num,
+                'target_user_id' => $userId,
                 'user_id' => $userId,
                 'user_phone' => $user_phone,
                 'user_name' => $user_name,
@@ -123,7 +124,7 @@ class InviteCodeService{
         $data =  InviteCode::where([
             'user_id' => $userId,
             'status' => InviteCode::STATUS_UNUSE
-        ])->select(['effective_days', DB::raw('GROUP_CONCAT(invite_code)as list, count(*) as num')])->groupBy('effective_days')->get();
+        ])->select(DB::raw('effective_days, GROUP_CONCAT(invite_code)as list, count(*) as num'))->groupBy('effective_days')->get();
 
         // 计算邀请码级别.
         foreach ($data as $k=>$v){
@@ -265,7 +266,7 @@ class InviteCodeService{
                     break;
             }
 
-            $type = 2;
+            $type = Order::ORDER_RENEWFEE;
             $member_phone  = $member['phone'];
             $member_name = $member['actual_name'];
             $total_price = $unit_price * $num;
@@ -276,6 +277,7 @@ class InviteCodeService{
                 'type' => $type,
                 'subtype' => $subtype,
                 'number' => $num,
+                'target_user_id' => $userId,
                 'user_id' => $member_id,
                 'user_phone' => $member_phone,
                 'user_name' => $member_name,
@@ -304,7 +306,7 @@ class InviteCodeService{
      * @param $phone
      * @throws \Exception
      */
-    public function turnVip($userId, $newCode){
+    public function upVip($userId, $newCode){
         try{
             // 验证邀请码有效性.
             $isCode = InviteCode::where([
@@ -342,7 +344,7 @@ class InviteCodeService{
                     $subtype = 33;
                     break;
             }
-            $type = 3;
+            $type = Order::ORDER_UPVIP;
             $number = 1;
             $user_phone  = $user['phone'];
             $user_name = $user['actual_name'];
@@ -354,6 +356,7 @@ class InviteCodeService{
                 'type' => $type,
                 'subtype' => $subtype,
                 'number' => $number,
+                'target_user_id' => $userId,
                 'user_id' => $userId,
                 'user_phone' => $user_phone,
                 'user_name' => $user_name,
@@ -382,31 +385,52 @@ class InviteCodeService{
      * @return mixed
      */
     public function applyList($userId){
-        // 查询可用邀请码.
-        $data =  InviteCode::where([
-            'user_id' => $userId,
-            'status' => InviteCode::STATUS_UNUSE
-        ])->select(['effective_days', DB::raw('count(*) as num')])->groupBy('effective_days')->get();
+        // 查询订单.
+        $data =  Order::where([
+            'target_user_id' => $userId
+        ])->select(['subtype', 'number', 'user_phone', 'status', 'created_at'])->orderBy('created_at', 'desc')->get();
 
-        // 计算邀请码级别.
-        foreach ($data as $k=>$v){
-            switch ($v['effective_days']){
-                case -1:
-                    $data[$k]['level'] = 'VIP';
-                    break;
-                case 30:
-                    $data[$k]['level'] = '月付';
-                    break;
-                case 90:
-                    $data[$k]['level'] = '季付';
-                    break;
-                case 365:
-                    $data[$k]['level'] = '年付';
-                    break;
-            }
+        // 订单类别.
+        $order_type = [
+            11 => '月付',
+            12 => '季付',
+            13 => '年付',
+            14 => 'VIP',
+            21 => '月续月',
+            22 => '月续季',
+            23 => '月续年',
+            24 => '季续月',
+            25 => '季续季',
+            26 => '季续年',
+            27 => '年续月',
+            28 => '年续季',
+            29 => '年续年',
+            31 => '月升级VIP',
+            32 => '季升级VIP',
+            33 => '年升级VIP'
+        ];
+
+        // 订单状态.
+        $order_status = [
+            -1 => '已驳回',
+            1 => '待审核',
+            99 => '审核中',
+            100 => '完成'
+        ];
+
+        foreach ($data as $k => $v) {
+            $data[$k]['subtype'] = $order_type[$v['subtype']];
+            $data[$k]['status'] = isset($order_status[$v['status']]) ? $order_status[$v['status']] : $order_status[99];
+            $data[$k]['date'] = explode(' ', $v['created_at'])[0];
+            $data[$k]['time'] = explode(' ', $v['created_at'])[1];
         }
 
-        return $data;
+        $result = [];
+        foreach($data as $k=>$v){
+            $result[$v['date']][] = $v;
+        }
+
+        return $result;
     }
 
 }
