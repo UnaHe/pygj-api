@@ -105,8 +105,8 @@ class UserService{
                         $masterUser['type'] = 2;
                         $masterUser['type_desc'] = "师傅";
                         $masterUser['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $masterUserId])->pluck('remark')->first();
+                        array_push($users, $masterUser);
                     }
-                    array_push($users, $masterUser);
                 }
             }
         }
@@ -276,8 +276,8 @@ class UserService{
                     $masterUser['type'] = 2;
                     $masterUser['type_desc'] = "师傅";
                     $masterUser['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $masterUserId])->pluck('remark')->first();
+                    array_push($users, $masterUser);
                 }
-                array_push($users, $masterUser);
             }
         }
 
@@ -291,51 +291,39 @@ class UserService{
      */
     public function applyList($userId){
         // 查询订单.
-        $data =  Order::where([
-            'target_user_id' => $userId
-        ])->select(['subtype', 'number', 'user_phone', 'status', 'created_at'])->orderBy('created_at', 'desc');
+        $data =  Order::where('target_user_id', $userId)->select(['subtype', 'number', 'user_phone', 'status', 'created_at'])->orderBy('created_at', 'desc');
 
         // 分页.
         $data = (new QueryHelper())->pagination($data)->get();
 
-        // 订单子类别.
-        $order_subtype = [
-            11 => '月付',
-            12 => '季付',
-            13 => '年付',
-            14 => 'VIP',
-            21 => '月续月',
-            22 => '月续季',
-            23 => '月续年',
-            24 => '季续月',
-            25 => '季续季',
-            26 => '季续年',
-            27 => '年续月',
-            28 => '年续季',
-            29 => '年续年',
-            31 => '月升级VIP',
-            32 => '季升级VIP',
-            33 => '年升级VIP'
-        ];
-
-        // 订单状态.
-        $order_status = [
-            -1 => '已驳回',
-            1 => '待审核',
-            99 => '审核中',
-            100 => '完成'
-        ];
-
         foreach ($data as $k => $v) {
-            $data[$k]['subtype'] = $order_subtype[$v['subtype']];
-            $data[$k]['status'] = isset($order_status[$v['status']]) ? $order_status[$v['status']] : $order_status[99];
+            $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
+            $data[$k]['status'] = isset($order_status[$v['status']]) ?  Order::$order_status[$v['status']] :  Order::$order_status[99];
             $data[$k]['date'] = explode(' ', $v['created_at'])[0];
             $data[$k]['time'] = explode(' ', $v['created_at'])[1];
         }
 
+        // 按日期分组.
         $result = [];
         foreach($data as $k=>$v){
             $result[$v['date']][] = $v;
+        }
+
+        // 分组计数.
+        $num = 0;
+        foreach ($result as $k => $v){
+            foreach ($v as $key => $vel){
+                $num += $vel['number'];
+            }
+            $result[$k]['num'] = $num;
+            $num = 0;
+        }
+
+        // 合计.
+        $numbers = 0;
+        foreach ($result as $k => $v){
+            $numbers += $v['num'];
+            $result['numbers'] = $numbers;
         }
 
         return $result;
@@ -347,33 +335,6 @@ class UserService{
      * @return mixed
      */
     public function recruit($userId, $page=1){
-        // 订单类别.
-        $order_type = [
-            1 => '我的招募申请',
-            2 => '学员变更申请',
-            3 => '学员变更申请'
-        ];
-
-        // 订单子类别.
-        $order_subtype = [
-            11 => '月付',
-            12 => '季付',
-            13 => '年付',
-            14 => 'VIP',
-            21 => '月续月',
-            22 => '月续季',
-            23 => '月续年',
-            24 => '季续月',
-            25 => '季续季',
-            26 => '季续年',
-            27 => '年续月',
-            28 => '年续季',
-            29 => '年续年',
-            31 => '月升级VIP',
-            32 => '季升级VIP',
-            33 => '年升级VIP'
-        ];
-
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
@@ -398,12 +359,12 @@ class UserService{
         $member =  Order::whereIn('target_user_id', $usersId)->select(DB::raw('target_user_id, type, subtype, sum(number) as num'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
 
         foreach ($member as $k => $v) {
-            if (isset($order_type[$v['type']])) {
-                $member[$k]['type'] = $order_type[$v['type']];
+            if (isset(Order::$order_type[$v['type']])) {
+                $member[$k]['type'] = Order::$order_type[$v['type']];
             } else {
                 unset($member[$k]);
             }
-            $member[$k]['subtype'] = $order_subtype[$v['subtype']];
+            $member[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
         }
 
         $result = [];
@@ -415,12 +376,12 @@ class UserService{
             $data =  Order::where(['target_user_id' => $userId])->select(DB::raw('target_user_id, type, subtype, sum(number) as num'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
 
             foreach ($data as $k => $v) {
-                if (isset($order_type[$v['type']])) {
-                    $data[$k]['type'] = $order_type[$v['type']];
+                if (isset(Order::$order_type[$v['type']])) {
+                    $data[$k]['type'] = Order::$order_type[$v['type']];
                 } else {
                     unset($data[$k]);
                 }
-                $data[$k]['subtype'] = $order_subtype[$v['subtype']];
+                $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
             }
 
             foreach($data as $k=>$v){

@@ -43,7 +43,7 @@ class InviteCodeController extends Controller
             return $this->ajaxError('数量应该为1-999');
         }
 
-        if(!preg_match('/^-1|30|90|365$/', $types)){
+        if(!preg_match('/^-1|30|90|365|5$/', $types)){
             return $this->ajaxError("请输入正确的邀请码类型");
         }
 

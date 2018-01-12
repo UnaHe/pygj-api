@@ -75,6 +75,10 @@ class InviteCodeService{
                     $subtype = 13;
                     $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                     break;
+                case 5:
+                    $subtype = 15;
+                    $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                    break;
             }
 
             $type = Order::ORDER_APPLY;
@@ -260,6 +264,22 @@ class InviteCodeService{
                             break;
                     }
                     break;
+                case 5:
+                    switch ($types){
+                        case 30:
+                            $subtype = 201;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                        case 90:
+                            $subtype = 202;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                        case 365:
+                            $subtype = 203;
+                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+                            break;
+                    }
+                    break;
             }
 
             $type = Order::ORDER_RENEWFEE;
@@ -340,6 +360,9 @@ class InviteCodeService{
                     break;
                 case 365:
                     $subtype = 33;
+                    break;
+                case 5:
+                    $subtype = 34;
                     break;
             }
             $type = Order::ORDER_UPVIP;
