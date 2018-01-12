@@ -309,20 +309,16 @@ class UserService{
             $result[$v['date']][] = $v;
         }
 
-        // 分组计数.
+        // 分组计数,合计.
         $num = 0;
+        $numbers = 0;
         foreach ($result as $k => $v){
             foreach ($v as $key => $vel){
                 $num += $vel['number'];
+                $numbers += $vel['number'];
             }
             $result[$k]['num'] = $num;
             $num = 0;
-        }
-
-        // 合计.
-        $numbers = 0;
-        foreach ($result as $k => $v){
-            $numbers += $v['num'];
             $result['numbers'] = $numbers;
         }
 
@@ -347,16 +343,26 @@ class UserService{
         $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
         $query->select(["user.id", "user.phone", "userinfo.wechat_id"]);
 
-        //我的学员
+        // 我的学员.
         $users = (new QueryHelper())->pagination($query)->get()->toArray();
 
+        // 我的用户信息.
+        $me = $User->where('id', $userId)->with('UserInfo')->first()->toArray();
+        $meInfo['id'] = $me['id'];
+        $meInfo['phone'] = $me['phone'];
+        $meInfo['wechat_id'] = $me['user_info']['wechat_id'];
+        array_push($users, $meInfo);
+
+        // 我的学员ID.
+        $usersId = [];
         foreach($users as $k=>$v){
             foreach($v as $key=>$val){
                 $usersId[] = $v['id'];
             }
         }
 
-        $member =  Order::whereIn('target_user_id', $usersId)->select(DB::raw('target_user_id, type, subtype, sum(number) as num'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
+        // 学员招募.
+        $member =  Order::whereIn('target_user_id', $usersId)->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
 
         foreach ($member as $k => $v) {
             if (isset(Order::$order_type[$v['type']])) {
@@ -372,8 +378,9 @@ class UserService{
             $result[$v['target_user_id']][$v['type']][] = $v;
         }
 
+        // 我的招募.
         if ($page == 1) {
-            $data =  Order::where(['target_user_id' => $userId])->select(DB::raw('target_user_id, type, subtype, sum(number) as num'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
+            $data =  Order::where(['target_user_id' => $userId])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
 
             foreach ($data as $k => $v) {
                 if (isset(Order::$order_type[$v['type']])) {
@@ -388,6 +395,30 @@ class UserService{
                 $result[$v['target_user_id']][$v['type']][] = $v;
             }
 
+        }
+
+        // 用户信息.
+        $info = [];
+        foreach ($users as $k => $v) {
+            $info[$v['id']]['phone'] = $v['phone'];
+            $info[$v['id']]['wechat_id'] = $v['wechat_id'];
+        }
+
+        // 分组计数,合计.
+        $num = 0;
+        $numbers = 0;
+        foreach ($result as $k => $v){
+            foreach ($v as $ke => $ve){
+                foreach ($ve as $key => $vel){
+                    $num += $vel['number'];
+                    $numbers += $vel['number'];
+                }
+                $result[$k][$ke]['num'] = $num;
+                $result[$k]['wechat_id'] = $info[$vel['target_user_id']]['wechat_id'];
+                $result[$k]['phone'] = $info[$vel['target_user_id']]['phone'];
+                $num = 0;
+                $result['numbers'] = $numbers;
+            }
         }
 
         return $result;
