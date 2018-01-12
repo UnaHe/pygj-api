@@ -52,16 +52,19 @@ class UserController extends Controller
     public function setUserInfo(Request $request){
         // 获得用户信息.
         $userId = $request->user()->id;
-        $data = $request->all();
+        $actual_name = $request->input('actual_name');
+        $wechat_id = $request->input('wechat_id');
+        $taobao_id = $request->input('taobao_id');
+        $alipay_id = $request->input('alipay_id');
 
         // 判断字段.
-        if(!$data['actual_name'] || !$data['wechat_id'] || !$data['taobao_id'] || !$data['alipay_id']){
+        if(!$actual_name || !$wechat_id || !$taobao_id || !$alipay_id){
             return $this->ajaxError("参数错误");
         }
 
         // 执行更新数据.
         try{
-            (new UserService())->setUserInfo($userId, $data);
+            (new UserService())->setUserInfo($userId, $actual_name, $wechat_id ,$taobao_id ,$alipay_id);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }

@@ -11,6 +11,7 @@ use App\Helpers\CacheHelper;
 use App\Helpers\QueryHelper;
 use App\Models\InviteCode;
 use App\Models\User;
+use App\Models\UserInfo;
 use App\Models\UserLevelConfig;
 use App\Models\FriendRemark;
 use Illuminate\Support\Facades\DB;
@@ -109,20 +110,26 @@ class UserService{
 
     /**
      * 完善资料
-     * @param $userid
-     * @param $data
+     * @param $userId
+     * @param $actual_name
+     * @param $wechat_id
+     * @param $taobao_id
+     * @param $alipay_id
      * @throws \Exception
      */
-    public function setUserInfo($userId, $data){
+    public function setUserInfo($userId, $actual_name, $wechat_id ,$taobao_id ,$alipay_id){
         try{
-            // 查询用户.
-            $user = User::find($userId);
-            if(!$user){
-                throw new \LogicException("用户不存在");
-            }
+            $res = UserInfo::create([
+                'user_id' => $userId,
+                'actual_name' => $actual_name,
+                'wechat_id' => $wechat_id,
+                'taobao_id' => $taobao_id,
+                'alipay_id' => $alipay_id,
+            ]);
 
-            // 更新数据.
-            $user->update($data);
+            if(!$res){
+                throw new \LogicException('信息存储失败');
+            }
         }catch (\Exception $e){
             if($e instanceof \LogicException){
                 $error = $e->getMessage();
@@ -135,7 +142,7 @@ class UserService{
 
     /**
      * 获取用户资料
-     * @param $userid
+     * @param $userId
      * @return array
      * @throws \Exception
      */
@@ -165,7 +172,7 @@ class UserService{
 
     /**
      * 密码验证
-     * @param $userid
+     * @param $userId
      * @param $password
      * @throws \Exception
      */

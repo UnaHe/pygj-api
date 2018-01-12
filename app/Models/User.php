@@ -45,4 +45,13 @@ class User extends Authenticatable
         }
         return $user;
     }
+
+    /**
+     * 获得与用户关联的信息.
+     */
+    public function UserInfo()
+    {
+        return $this->hasOne('App\Models\UserInfo', 'user_id', 'id');
+    }
+
 }

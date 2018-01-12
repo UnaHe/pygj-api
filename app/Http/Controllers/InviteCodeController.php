@@ -130,7 +130,7 @@ class InviteCodeController extends Controller
         $userId = $request->user()->id;
         $newCode = $request->input('new_code');
 
-        if(preg_match('/^\w{1,6}$/', $newCode)){
+        if(!preg_match('/^\w{1,6}$/', $newCode)){
             return $this->ajaxError('参数错误');
         }
 
