@@ -166,7 +166,7 @@ class UserService{
     public function getUserInfo($userId){
         try{
             // 查询用户.
-            $user = User::find($userId)->with('UserInfo')->first()->toArray();
+            $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
             $user['upgrade'] = $user['user_info']['upgrade'];
             $user['actual_name'] = $user['user_info']['actual_name'];
             $user['wechat_id'] = $user['user_info']['wechat_id'];
