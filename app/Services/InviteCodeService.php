@@ -56,10 +56,6 @@ class InviteCodeService{
         try{
             // 我的用户信息.
             $user = User::where("id", $userId)->first();
-//            $grade = $user['grade'] ? : 1;
-
-            // 邀请码价格.
-//            $price = json_decode((new SysConfigService())->get('invite_code_price'), true);
 
             // 生成订单字段.
             switch ($types){
@@ -174,11 +170,11 @@ class InviteCodeService{
      */
     public function renewFee($userId, $phone, $types, $num){
         try{
-            $users = new User();
+            $User = new User();
             $InviteCode = new InviteCode();
 
             // 用户信息.
-            $member = $users->where('phone', $phone)->first();
+            $member = $User->where('phone', $phone)->first();
 
             if(!$member){
                 throw new \LogicException('用户不存在');
@@ -192,7 +188,7 @@ class InviteCodeService{
                     'invite.user_id' => $userId,
                     'invite.status' => InviteCode::STATUS_USED
                 ]);
-                $query->leftjoin($users->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
+                $query->leftjoin($User->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
                 $query->select("user.id");
 
                 //我的学员
@@ -308,8 +304,10 @@ class InviteCodeService{
      */
     public function upVip($userId, $newCode){
         try{
+            $InviteCode = new InviteCode();
+
             // 验证邀请码有效性.
-            $isCode = InviteCode::where([
+            $isCode = $InviteCode->where([
                 'invite_code' => $newCode,
                 'effective_days' => -1,
                 'status' => InviteCode::STATUS_UNUSE
@@ -324,7 +322,7 @@ class InviteCodeService{
             $userCode = $user['invite_code'];
 
             // 当前邀请码级别.
-            $userType = InviteCode::where([
+            $userType = $InviteCode->where([
                 'invite_code' => $userCode
             ])->pluck('effective_days')->first();
 
@@ -377,60 +375,6 @@ class InviteCodeService{
             }
             throw new \Exception($error);
         }
-    }
-
-    /**
-     * 获取学员位申请记录
-     * @param $userId
-     * @return mixed
-     */
-    public function applyList($userId){
-        // 查询订单.
-        $data =  Order::where([
-            'target_user_id' => $userId
-        ])->select(['subtype', 'number', 'user_phone', 'status', 'created_at'])->orderBy('created_at', 'desc')->get();
-
-        // 订单类别.
-        $order_type = [
-            11 => '月付',
-            12 => '季付',
-            13 => '年付',
-            14 => 'VIP',
-            21 => '月续月',
-            22 => '月续季',
-            23 => '月续年',
-            24 => '季续月',
-            25 => '季续季',
-            26 => '季续年',
-            27 => '年续月',
-            28 => '年续季',
-            29 => '年续年',
-            31 => '月升级VIP',
-            32 => '季升级VIP',
-            33 => '年升级VIP'
-        ];
-
-        // 订单状态.
-        $order_status = [
-            -1 => '已驳回',
-            1 => '待审核',
-            99 => '审核中',
-            100 => '完成'
-        ];
-
-        foreach ($data as $k => $v) {
-            $data[$k]['subtype'] = $order_type[$v['subtype']];
-            $data[$k]['status'] = isset($order_status[$v['status']]) ? $order_status[$v['status']] : $order_status[99];
-            $data[$k]['date'] = explode(' ', $v['created_at'])[0];
-            $data[$k]['time'] = explode(' ', $v['created_at'])[1];
-        }
-
-        $result = [];
-        foreach($data as $k=>$v){
-            $result[$v['date']][] = $v;
-        }
-
-        return $result;
     }
 
 }

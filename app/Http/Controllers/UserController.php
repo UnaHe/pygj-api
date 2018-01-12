@@ -134,4 +134,28 @@ class UserController extends Controller
 
     }
 
+    /**
+     * 获取学员位申请记录
+     * @param Request $request
+     * @return static
+     */
+    public function applyList(Request $request){
+        $userId = $request->user()->id;
+        $data = (new UserService())->applyList($userId);
+        return $this->ajaxSuccess($data);
+    }
+
+    /**
+     * 获取学员招募记录
+     * @param Request $request
+     * @return static
+     */
+    public function recruit(Request $request){
+        $userId = $request->user()->id;
+        //分页参数
+        $page = $request->get("page",1);
+        $data = (new UserService())->recruit($userId, $page);
+        return $this->ajaxSuccess($data);
+    }
+
 }

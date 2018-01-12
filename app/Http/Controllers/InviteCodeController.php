@@ -143,15 +143,4 @@ class InviteCodeController extends Controller
         return $this->ajaxSuccess();
     }
 
-    /**
-     * 获取学员位申请记录
-     * @param Request $request
-     * @return static
-     */
-    public function applyList(Request $request){
-        $userId = $request->user()->id;
-        $data = (new InviteCodeService())->applyList($userId);
-        return $this->ajaxSuccess($data);
-    }
-
 }

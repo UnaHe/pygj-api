@@ -14,9 +14,10 @@ class FriendRemarkService{
      */
     public function setRemark($userId, $friend_user_id, $remark){
         try{
-            $data = FriendRemark::where(['user_id' => $userId, 'friend_user_id' => $friend_user_id])->first();
+            $FriendRemark = new FriendRemark();
+            $data = $FriendRemark->where(['user_id' => $userId, 'friend_user_id' => $friend_user_id])->first();
             if($data == NULL){
-                $res = FriendRemark::create([
+                $res = $FriendRemark->create([
                     'user_id' => $userId,
                     'friend_user_id' => $friend_user_id,
                     'remark' => $remark

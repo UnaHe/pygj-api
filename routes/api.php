@@ -86,11 +86,6 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::post('/invideCode/upVip', "InviteCodeController@upVip");
 
         /**
-         * 获取学员位申请记录
-         */
-        Route::get('/member/applyList', "InviteCodeController@applyList");
-
-        /**
          * 创建消息
          */
         Route::post('/messages/setMessage', "MessageController@setMessage");
@@ -126,6 +121,12 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 获取学员招募记录
          */
+        Route::get('/member/recruit', "UserController@recruit");
+
+        /**
+         * 获取学员位申请记录
+         */
+        Route::get('/member/applyList', "UserController@applyList");
 
     });
 
