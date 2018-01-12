@@ -51,7 +51,7 @@ class User extends Authenticatable
      */
     public function UserInfo()
     {
-        return $this->hasOne('App\Models\UserInfo', 'user_id', 'id');
+        return $this->hasOne('App\Models\UserInfo', 'user_id', 'id')->select('id', 'user_id', 'upgrade', 'actual_name', 'wechat_id', 'taobao_id', 'alipay_id');
     }
 
 }

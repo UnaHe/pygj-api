@@ -55,7 +55,7 @@ class InviteCodeService{
     public function appInviteCode($userId, $types, $num){
         try{
             // 我的用户信息.
-            $user = User::where("id", $userId)->first();
+            $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
 
             // 生成订单字段.
             switch ($types){
@@ -79,7 +79,7 @@ class InviteCodeService{
 
             $type = Order::ORDER_APPLY;
             $user_phone  = $user['phone'];
-            $user_name = $user['actual_name'];
+            $user_name = $user['user_info']['actual_name'];
             $total_price = $unit_price * $num;
             $status = 1;
 
@@ -174,7 +174,7 @@ class InviteCodeService{
             $InviteCode = new InviteCode();
 
             // 用户信息.
-            $member = $User->where('phone', $phone)->first();
+            $member = $User->where('phone', $phone)->with('UserInfo')->first()->toArray();
 
             if(!$member){
                 throw new \LogicException('用户不存在');
@@ -264,7 +264,7 @@ class InviteCodeService{
 
             $type = Order::ORDER_RENEWFEE;
             $member_phone  = $member['phone'];
-            $member_name = $member['actual_name'];
+            $member_name = $member['user_info']['actual_name'];
             $total_price = $unit_price * $num;
             $status = 1;
 
@@ -318,7 +318,7 @@ class InviteCodeService{
             }
 
             // 我的用户信息.
-            $user = User::where('id', $userId)->first();
+            $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
             $userCode = $user['invite_code'];
 
             // 当前邀请码级别.
@@ -345,7 +345,7 @@ class InviteCodeService{
             $type = Order::ORDER_UPVIP;
             $number = 1;
             $user_phone  = $user['phone'];
-            $user_name = $user['actual_name'];
+            $user_name = $user['user_info']['actual_name'];
             $unit_price = CodePrice::where(['duration' => '-1'])->pluck('code_price')->first();
             $status = 1;
 

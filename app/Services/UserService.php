@@ -32,7 +32,7 @@ class UserService{
 
         $UserLevelConfig = new UserLevelConfig();
 
-        $user = User::where("id", $userId)->first();
+        $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
         // 账户等级.
         $grade = $user['grade'] ? : 1;
         $gradeConfig = $UserLevelConfig->where("id", $grade)->first();
@@ -45,7 +45,7 @@ class UserService{
         $gradePic = 'http://'.config('domains.pygj_domains').$gradeConfig['grede_pic'];
         $isTop = $gradeConfig['is_top'];
         // 升级需要数量.
-        $upgradeNeedNum = $user['upgrade'] ? : 12;
+        $upgradeNeedNum = $user['user_info']['upgrade'] ? : 12;
 
         // 升级等级.
         $upgradeGrade = ($grade + 1) <= 3 ? $grade + 1 : 3;
@@ -72,13 +72,15 @@ class UserService{
     public function getMyMember($userId, $page=1){
         $User = new User();
         $InviteCode = new InviteCode();
+        $UserInfo = new UserInfo();
 
-        $query =$InviteCode->from($InviteCode->getTable()." as invite")->where([
+        $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
             'invite.user_id' => $userId,
             'invite.status' => InviteCode::STATUS_USED
         ]);
         $query->leftjoin($User->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
-        $query->select(["user.id", "user.phone", "user.actual_name", "user.wechat_id", "user.taobao_id"]);
+        $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
+        $query->select(["user.id", "user.phone", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"]);
 
         //我的学员
         $users = (new QueryHelper())->pagination($query)->get()->toArray();
@@ -96,10 +98,14 @@ class UserService{
                 //师傅的用户id
                 $masterUserId = $InviteCode->where(['invite_code' => $inviteCode])->pluck('user_id')->first();
                 if($masterUserId){
-                    $masterUser = User::where("id", $masterUserId)->select(["id", "phone", "actual_name", "wechat_id", "taobao_id"])->first()->toArray();
-                    $masterUser['type'] = 2;
-                    $masterUser['type_desc'] = "师傅";
-                    $masterUser['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $masterUserId])->pluck('remark')->first();
+                    $masterUser = $User->from($User->getTable()." as user")->where('user.id', $masterUserId)
+                        ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")
+                        ->select(["user.id", "user.phone", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"])->first();
+                    if($masterUser){
+                        $masterUser['type'] = 2;
+                        $masterUser['type_desc'] = "师傅";
+                        $masterUser['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $masterUserId])->pluck('remark')->first();
+                    }
                     array_push($users, $masterUser);
                 }
             }
@@ -119,14 +125,25 @@ class UserService{
      */
     public function setUserInfo($userId, $actual_name, $wechat_id ,$taobao_id ,$alipay_id){
         try{
-            $res = UserInfo::create([
-                'user_id' => $userId,
-                'actual_name' => $actual_name,
-                'wechat_id' => $wechat_id,
-                'taobao_id' => $taobao_id,
-                'alipay_id' => $alipay_id,
-            ]);
+            $data = UserInfo::where('user_id', $userId)->first();
 
+            if($data !== NULL){
+                $res = $data->update([
+                    'user_id' => $userId,
+                    'actual_name' => $actual_name,
+                    'wechat_id' => $wechat_id,
+                    'taobao_id' => $taobao_id,
+                    'alipay_id' => $alipay_id,
+                ]);
+            } else {
+                $res = UserInfo::create([
+                    'user_id' => $userId,
+                    'actual_name' => $actual_name,
+                    'wechat_id' => $wechat_id,
+                    'taobao_id' => $taobao_id,
+                    'alipay_id' => $alipay_id,
+                ]);
+            }
             if(!$res){
                 throw new \LogicException('信息存储失败');
             }
@@ -149,7 +166,13 @@ class UserService{
     public function getUserInfo($userId){
         try{
             // 查询用户.
-            $user = User::find($userId);
+            $user = User::find($userId)->with('UserInfo')->first()->toArray();
+            $user['upgrade'] = $user['user_info']['upgrade'];
+            $user['actual_name'] = $user['user_info']['actual_name'];
+            $user['wechat_id'] = $user['user_info']['wechat_id'];
+            $user['taobao_id'] = $user['user_info']['taobao_id'];
+            $user['alipay_id'] = $user['user_info']['alipay_id'];
+            unset($user['user_info']);
             if(!$user){
                 throw new \LogicException("用户不存在");
             }
@@ -209,6 +232,7 @@ class UserService{
     public function querFriend($userId, $keyword){
         $User = new User();
         $InviteCode = new InviteCode();
+        $UserInfo = new UserInfo();
 
         // 查找我的学员.
         $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
@@ -216,12 +240,13 @@ class UserService{
             'invite.status' => InviteCode::STATUS_USED
         ]);
         $query->leftjoin($User->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
-        $query->select(["user.id", "user.phone", "user.actual_name", "user.wechat_id", "user.taobao_id"]);
+        $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
+        $query->select(["user.id", "user.phone", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"]);
 
         // 查找关键字.
         $query->where(function($query) use($keyword){
             $query->where('user.phone', 'like', "%$keyword%")
-                ->orwhere('user.wechat_id', 'like', "%$keyword%");
+                ->orwhere('userinfo.wechat_id', 'like', "%$keyword%");
         });
 
         // 符合条件的学员.
@@ -240,15 +265,18 @@ class UserService{
             $masterUserId = $InviteCode->where(['invite_code' => $inviteCode])->pluck('user_id')->first();
             if($masterUserId){
                 // 匹配师傅关键字.
-                $masterUser = $User->where("id", $masterUserId)
-                    ->select(["id", "phone", "actual_name", "wechat_id", "taobao_id"])
+                $masterUser = $User->from($User->getTable()." as user")->where("user.id", $masterUserId)
+                    ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")
+                    ->select(["user.id", "user.phone", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"])
                     ->where(function($query) use($keyword){
-                    $query->where('phone', 'like', "%$keyword%")
-                        ->orwhere('wechat_id', 'like', "%$keyword%");
-                })->first();
-                $masterUser['type'] = 2;
-                $masterUser['type_desc'] = "师傅";
-                $masterUser['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $masterUserId])->pluck('remark')->first();
+                        $query->where('user.phone', 'like', "%$keyword%")
+                            ->orwhere('userinfo.wechat_id', 'like', "%$keyword%");
+                    })->first();
+                if($masterUser){
+                    $masterUser['type'] = 2;
+                    $masterUser['type_desc'] = "师傅";
+                    $masterUser['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $masterUserId])->pluck('remark')->first();
+                }
                 array_push($users, $masterUser);
             }
         }
@@ -314,7 +342,7 @@ class UserService{
     }
 
     /**
-     * 获取学员位申请记录
+     * 获取学员招募记录
      * @param $userId
      * @return mixed
      */
@@ -348,13 +376,15 @@ class UserService{
 
         $User = new User();
         $InviteCode = new InviteCode();
+        $UserInfo = new UserInfo();
 
-        $query =$InviteCode->from($InviteCode->getTable()." as invite")->where([
+        $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
             'invite.user_id' => $userId,
             'invite.status' => InviteCode::STATUS_USED
         ]);
         $query->leftjoin($User->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
-        $query->select(["user.id", "user.phone", "user.wechat_id"]);
+        $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
+        $query->select(["user.id", "user.phone", "userinfo.wechat_id"]);
 
         //我的学员
         $users = (new QueryHelper())->pagination($query)->get()->toArray();
