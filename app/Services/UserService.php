@@ -302,7 +302,7 @@ class UserService{
         $endTime = $endTime ? : date('Y-m-d H:i:s', $end);
 
         // 查询订单.
-        $data =  Order::where([
+        $data = Order::where([
             ['target_user_id', $userId],
             ['created_at', '>=', $startTime],
             ['created_at', '<=', $endTime]
@@ -335,6 +335,7 @@ class UserService{
             $result[$k]['num'] = $num;
             $num = 0;
             $result['numbers'] = $numbers;
+            $result['servertime'] = date('Y-m-d', time());
         }
 
         return $result;
@@ -388,7 +389,7 @@ class UserService{
         }
 
         // 学员招募.
-        $member =  Order::whereIn('target_user_id', $usersId)->where([
+        $member = Order::whereIn('target_user_id', $usersId)->where([
             ['created_at', '>=', $startTime],
             ['created_at', '<=', $endTime]
         ])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
@@ -409,7 +410,7 @@ class UserService{
 
         // 我的招募.
         if ($page == 1) {
-            $data =  Order::where([
+            $data = Order::where([
                 ['target_user_id', $userId],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
