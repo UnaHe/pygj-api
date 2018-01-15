@@ -166,7 +166,7 @@ class UserService{
     public function getUserInfo($userId){
         try{
             // 查询用户.
-            $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
+            $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
             $user['upgrade'] = $user['user_info']['upgrade'];
             $user['actual_name'] = $user['user_info']['actual_name'];
             $user['wechat_id'] = $user['user_info']['wechat_id'];
@@ -287,11 +287,26 @@ class UserService{
     /**
      * 获取学员位申请记录
      * @param $userId
+     * @param $startTime
+     * @param $endTime
      * @return mixed
      */
-    public function applyList($userId){
+    public function applyList($userId, $startTime='', $endTime=''){
+        // 初始化时间.
+        $year = date("Y");
+        $month = date("m");
+        $day = date("d");
+        $start = mktime(0,0,0,$month-1,$day,$year);
+        $end= mktime(23,59,59,$month+1,$day,$year);
+        $startTime = $startTime ? : date('Y-m-d H:i:s', $start);
+        $endTime = $endTime ? : date('Y-m-d H:i:s', $end);
+
         // 查询订单.
-        $data =  Order::where('target_user_id', $userId)->select(['subtype', 'number', 'user_phone', 'status', 'created_at'])->orderBy('created_at', 'desc');
+        $data =  Order::where([
+            ['target_user_id', $userId],
+            ['created_at', '>=', $startTime],
+            ['created_at', '<=', $endTime]
+        ])->select(['subtype', 'number', 'user_phone', 'status', 'created_at'])->orderBy('created_at', 'desc');
 
         // 分页.
         $data = (new QueryHelper())->pagination($data)->get();
@@ -328,9 +343,20 @@ class UserService{
     /**
      * 获取学员招募记录
      * @param $userId
+     * @param $startTime
+     * @param $endTime
      * @return mixed
      */
-    public function recruit($userId, $page=1){
+    public function recruit($userId, $page=1, $startTime='', $endTime=''){
+        // 初始化时间.
+        $year = date("Y");
+        $month = date("m");
+        $day = date("d");
+        $start = mktime(0,0,0,$month-1,$day,$year);
+        $end= mktime(23,59,59,$month+1,$day,$year);
+        $startTime = $startTime ? : date('Y-m-d H:i:s', $start);
+        $endTime = $endTime ? : date('Y-m-d H:i:s', $end);
+
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
@@ -362,7 +388,10 @@ class UserService{
         }
 
         // 学员招募.
-        $member =  Order::whereIn('target_user_id', $usersId)->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
+        $member =  Order::whereIn('target_user_id', $usersId)->where([
+            ['created_at', '>=', $startTime],
+            ['created_at', '<=', $endTime]
+        ])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
 
         foreach ($member as $k => $v) {
             if (isset(Order::$order_type[$v['type']])) {
@@ -380,7 +409,11 @@ class UserService{
 
         // 我的招募.
         if ($page == 1) {
-            $data =  Order::where(['target_user_id' => $userId])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
+            $data =  Order::where([
+                ['target_user_id', $userId],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
 
             foreach ($data as $k => $v) {
                 if (isset(Order::$order_type[$v['type']])) {

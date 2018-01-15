@@ -144,7 +144,9 @@ class UserController extends Controller
      */
     public function applyList(Request $request){
         $userId = $request->user()->id;
-        $data = (new UserService())->applyList($userId);
+        $startTime = $request->input('start_time');
+        $endTime = $request->input('end_time');
+        $data = (new UserService())->applyList($userId, $startTime, $endTime);
         return $this->ajaxSuccess($data);
     }
 
@@ -155,9 +157,11 @@ class UserController extends Controller
      */
     public function recruit(Request $request){
         $userId = $request->user()->id;
+        $startTime = $request->input('start_time');
+        $endTime = $request->input('end_time');
         //分页参数
         $page = $request->get("page",1);
-        $data = (new UserService())->recruit($userId, $page);
+        $data = (new UserService())->recruit($userId, $page, $startTime, $endTime);
         return $this->ajaxSuccess($data);
     }
 
