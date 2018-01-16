@@ -109,7 +109,6 @@ class UserController extends Controller
         }
 
         return $this->ajaxSuccess();
-
     }
 
     /**
@@ -134,7 +133,6 @@ class UserController extends Controller
         }
 
         return $this->ajaxSuccess($data);
-
     }
 
     /**
@@ -146,7 +144,13 @@ class UserController extends Controller
         $userId = $request->user()->id;
         $startTime = $request->input('start_time');
         $endTime = $request->input('end_time');
-        $data = (new UserService())->applyList($userId, $startTime, $endTime);
+
+        try{
+            $data = (new UserService())->applyList($userId, $startTime, $endTime);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
         return $this->ajaxSuccess($data);
     }
 
@@ -161,8 +165,48 @@ class UserController extends Controller
         $endTime = $request->input('end_time');
         //分页参数
         $page = $request->get("page",1);
-        $data = (new UserService())->recruit($userId, $page, $startTime, $endTime);
+
+        try{
+            $data = (new UserService())->recruit($userId, $page, $startTime, $endTime);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
         return $this->ajaxSuccess($data);
+    }
+
+    /**
+     * 今日收益
+     * @param Request $request
+     * @return static
+     */
+    public function income(Request $request){
+        $userId = $request->user()->id;
+        try{
+            $data = (new UserService())->income($userId);
+        }catch (\Exception $e){
+            $this->ajaxError("系统错误");
+        }
+        return $this->ajaxSuccess($data);
+    }
+
+    /**
+     * 提现申请
+     * @param Request $request
+     * @return static
+     */
+    public function extract(Request $request){
+        $userId = $request->user()->id;
+        $money = $request->input('money');
+
+        // 提交申请.
+        try{
+            (new UserService())->extract($userId, $money);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess();
     }
 
 }

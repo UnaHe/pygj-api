@@ -84,6 +84,7 @@ class InviteCodeService{
             $type = Order::ORDER_APPLY;
             $user_phone  = $user['phone'];
             $user_name = $user['user_info']['actual_name'];
+            $user_grade = $user['grade'] ? : 1;
             $total_price = $unit_price * $num;
             $status = 1;
 
@@ -96,6 +97,7 @@ class InviteCodeService{
                 'user_id' => $userId,
                 'user_phone' => $user_phone,
                 'user_name' => $user_name,
+                'user_grade' => $user_grade,
                 'unit_price' => $unit_price,
                 'total_price' => $total_price,
                 'status' => $status,
@@ -285,6 +287,7 @@ class InviteCodeService{
             $type = Order::ORDER_RENEWFEE;
             $member_phone  = $member['phone'];
             $member_name = $member['user_info']['actual_name'];
+            $member_grade = $member['grade'] ? : 1;
             $total_price = $unit_price * $num;
             $status = 1;
 
@@ -297,6 +300,7 @@ class InviteCodeService{
                 'user_id' => $member_id,
                 'user_phone' => $member_phone,
                 'user_name' => $member_name,
+                'user_grade' => $member_grade,
                 'unit_price' => $unit_price,
                 'total_price' => $total_price,
                 'status' => $status,
@@ -369,6 +373,7 @@ class InviteCodeService{
             $number = 1;
             $user_phone  = $user['phone'];
             $user_name = $user['user_info']['actual_name'];
+            $user_grade = $user['grade'] ? : 1;
             $unit_price = CodePrice::where(['duration' => '-1'])->pluck('code_price')->first();
             $status = 1;
 
@@ -381,6 +386,7 @@ class InviteCodeService{
                 'user_id' => $userId,
                 'user_phone' => $user_phone,
                 'user_name' => $user_name,
+                'user_grade' => $user_grade,
                 'unit_price' => $unit_price,
                 'total_price' => $unit_price,
                 'status' => $status,

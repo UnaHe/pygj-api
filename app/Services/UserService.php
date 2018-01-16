@@ -335,7 +335,7 @@ class UserService{
             $result[$k]['num'] = $num;
             $num = 0;
             $result['numbers'] = $numbers;
-            $result['servertime'] = date('Y-m-d', time());
+            $result['servertime'] = time();
         }
 
         return $result;
@@ -456,6 +456,60 @@ class UserService{
         }
 
         return $result;
+    }
+
+    /**
+     * 今日收益
+     * @param $userId
+     * @return mixed
+     */
+    public function income($userId){
+
+    }
+
+    /**
+     * 提现申请
+     * @param $userId
+     * @param $money
+     * @return mixed
+     * @throws \Exception
+     */
+    public function extract($userId, $money){
+        try{
+            // 我的用户信息.
+            $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
+
+            $type = Order::ORDER_EXTRACT;
+            $subtype = 0;
+            $user_phone  = $user['phone'];
+            $user_name = $user['user_info']['actual_name'];
+            $user_grade = $user['grade'] ? : 1;
+            $status = 1;
+
+            // 创建申请订单.
+            $res = Order::create([
+                'type' => $type,
+                'subtype' => $subtype,
+                'target_user_id' => $userId,
+                'user_id' => $userId,
+                'user_phone' => $user_phone,
+                'user_name' => $user_name,
+                'user_grade' => $user_grade,
+                'status' => $status,
+                'remark' => $money,
+            ]);
+
+            if(!$res){
+                throw new \LogicException('提现申请失败');
+            }
+        }catch (\Exception $e){
+            if($e instanceof \LogicException){
+                $error = $e->getMessage();
+            }else{
+                $error = '提现申请失败';
+            }
+            throw new \Exception($error);
+        }
     }
 
 }

@@ -29,6 +29,11 @@ class Order extends Model
      */
     const ORDER_UPVIP = 3;
 
+    /**
+     * 4:提现订单
+     */
+    const ORDER_EXTRACT = 4;
+
     // 订单类别.
     static $order_type = [
         1 => '我的招募申请',

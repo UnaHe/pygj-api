@@ -113,10 +113,12 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 今日收益
          */
+        Route::get('/income', "UserController@income");
 
         /**
          * 提现申请
          */
+        Route::post('/extract', "UserController@extract");
 
         /**
          * 获取学员招募记录
