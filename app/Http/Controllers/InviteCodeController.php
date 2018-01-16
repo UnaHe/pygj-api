@@ -68,22 +68,6 @@ class InviteCodeController extends Controller
     }
 
     /**
-     * 派发邀请码
-     * @param Request $request
-     * @return static
-     */
-    public function sendInviteCode(Request $request){
-        $userId = $request->user()->id;
-        // 获得要排法的邀请码类型.
-        $validity = $request->input('validity');
-        if(!preg_match('/^-1|30|90|365$/', $validity)){
-            return $this->ajaxError("参数错误");
-        }
-        $data = (new InviteCodeService())->sendInviteCode($userId, $validity);
-        return $this->ajaxSuccess($data);
-    }
-
-    /**
      * 续费
      * @param Request $request
      * @return static

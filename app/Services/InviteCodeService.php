@@ -150,23 +150,6 @@ class InviteCodeService{
     }
 
     /**
-     * 派发邀请码
-     * @param $userId
-     * @param $validity
-     * @return mixed
-     */
-    public function sendInviteCode($userId, $validity){
-        // 获得可用邀请码.
-        $data =  InviteCode::where([
-            'user_id' => $userId,
-            'status' => InviteCode::STATUS_UNUSE,
-            'effective_days' => $validity
-        ])->select(['invite_code'])->get();
-
-        return $data;
-    }
-
-    /**
      * 续费
      * @param $userId
      * @param $phone

@@ -68,12 +68,7 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 派发邀请码列表
          */
-        Route::get('/invideCode/sendInviteList', "InviteCodeController@sendInviteList");
-
-        /**
-         * 派发邀请码
-         */
-        Route::post('/invideCode/sendInviteCode', "InviteCodeController@sendInviteCode");
+        Route::post('/invideCode/sendInviteList', "InviteCodeController@sendInviteList");
 
         /**
          * 续费
