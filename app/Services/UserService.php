@@ -355,8 +355,8 @@ class UserService{
         $day = date("d");
         $start = mktime(0,0,0,$month-1,$day,$year);
         $end= mktime(23,59,59,$month+1,$day,$year);
-        $startTime = $startTime ? : date('Y-m-d H:i:s', $start);
-        $endTime = $endTime ? : date('Y-m-d H:i:s', $end);
+        $startTime = $startTime ? $startTime.' 00:00:00' : date('Y-m-d H:i:s', $start);
+        $endTime = $endTime ? $endTime.' 23:59:59' : date('Y-m-d H:i:s', $end);
 
         $User = new User();
         $InviteCode = new InviteCode();
