@@ -480,7 +480,7 @@ class UserService{
             $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
 
             $type = Order::ORDER_EXTRACT;
-            $subtype = 0;
+            $subtype = 41;
             $user_phone  = $user['phone'];
             $user_name = $user['user_info']['actual_name'];
             $user_grade = $user['grade'] ? : 1;
