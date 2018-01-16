@@ -313,7 +313,7 @@ class UserService{
 
         foreach ($data as $k => $v) {
             $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
-            $data[$k]['status'] = isset($order_status[$v['status']]) ?  Order::$order_status[$v['status']] :  Order::$order_status[99];
+            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[99];
             $data[$k]['date'] = explode(' ', $v['created_at'])[0];
             $data[$k]['time'] = explode(' ', $v['created_at'])[1];
         }
