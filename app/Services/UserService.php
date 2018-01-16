@@ -298,8 +298,8 @@ class UserService{
         $day = date("d");
         $start = mktime(0,0,0,$month-1,$day,$year);
         $end= mktime(23,59,59,$month+1,$day,$year);
-        $startTime = $startTime ? : date('Y-m-d H:i:s', $start);
-        $endTime = $endTime ? : date('Y-m-d H:i:s', $end);
+        $startTime = $startTime ? $startTime.' 00:00:00' : date('Y-m-d H:i:s', $start);
+        $endTime = $endTime ? $endTime.' 23:59:59' : date('Y-m-d H:i:s', $end);
 
         // 查询订单.
         $data = Order::where([
@@ -485,18 +485,20 @@ class UserService{
             $user_name = $user['user_info']['actual_name'];
             $user_grade = $user['grade'] ? : 1;
             $status = 1;
+            $remark = $user['user_info']['alipay_id'];
 
             // 创建申请订单.
             $res = Order::create([
                 'type' => $type,
                 'subtype' => $subtype,
+                'number' => $money,
                 'target_user_id' => $userId,
                 'user_id' => $userId,
                 'user_phone' => $user_phone,
                 'user_name' => $user_name,
                 'user_grade' => $user_grade,
                 'status' => $status,
-                'remark' => $money,
+                'remark' => $remark,
             ]);
 
             if(!$res){

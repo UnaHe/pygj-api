@@ -63,7 +63,8 @@ class Order extends Model
         31 => '月升级VIP',
         32 => '季升级VIP',
         33 => '年升级VIP',
-        34 => '试用升级VIP'
+        34 => '试用升级VIP',
+        41 => '提现'
     ];
 
     // 订单状态.
