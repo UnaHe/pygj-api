@@ -111,6 +111,11 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::get('/income', "UserController@income");
 
         /**
+         * 收益列表
+         */
+        Route::get('/incomeList', "UserController@incomeList");
+
+        /**
          * 提现申请
          */
         Route::post('/extract', "UserController@extract");

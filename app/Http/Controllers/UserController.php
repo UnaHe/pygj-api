@@ -13,11 +13,13 @@ class UserController extends Controller
      */
     public function getUserLevel(Request $request){
         $userId = $request->user()->id;
+
         try{
             $data = (new UserService())->getUserLevel($userId);
         }catch (\Exception $e){
             $this->ajaxError("系统错误");
         }
+
         return $this->ajaxSuccess($data);
     }
 
@@ -30,11 +32,13 @@ class UserController extends Controller
         $userId = $request->user()->id;
         //分页参数
         $page = $request->get("page",1);
+
         try{
             $data = (new UserService())->getMyMember($userId, $page);
         }catch (\Exception $e){
             $this->ajaxError("系统错误");
         }
+
         return $this->ajaxSuccess($data);
     }
 
@@ -73,11 +77,13 @@ class UserController extends Controller
      */
     public function getUserInfo(Request $request){
         $userId = $request->user()->id;
+
         try{
             $data = (new UserService())->getUserInfo($userId);
         }catch (\Exception $e){
-            $this->ajaxError("系统错误");
+            return $this->ajaxError($e->getMessage());
         }
+
         return $this->ajaxSuccess($data);
     }
 
@@ -193,11 +199,30 @@ class UserController extends Controller
      */
     public function income(Request $request){
         $userId = $request->user()->id;
+
         try{
             $data = (new UserService())->income($userId);
         }catch (\Exception $e){
-            $this->ajaxError("系统错误");
+            return $this->ajaxError($e->getMessage());
         }
+
+        return $this->ajaxSuccess($data);
+    }
+
+    /**
+     * 收益列表
+     * @param Request $request
+     * @return static
+     */
+    public function incomeList(Request $request){
+        $userId = $request->user()->id;
+
+        try{
+            $data = (new UserService())->incomeList($userId);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
         return $this->ajaxSuccess($data);
     }
 

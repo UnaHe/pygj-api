@@ -343,9 +343,9 @@ class UserService{
             }
             $result[$k]['num'] = $num;
             $num = 0;
-            $result['numbers'] = $numbers;
-            $result['servertime'] = time();
         }
+        $result['numbers'] = $numbers;
+        $result['servertime'] = time();
 
         return $result;
     }
@@ -404,7 +404,7 @@ class UserService{
             ['type', '<=', 2],
             ['created_at', '>=', $startTime],
             ['created_at', '<=', $endTime]
-        ])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype']);
+        ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
         $member = $member->get()->toArray();
 
         foreach ($member as $k => $v) {
@@ -430,7 +430,7 @@ class UserService{
                 ['target_user_id', $userId],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
-            ])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype']);
+            ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
             $data = $data->get()->toArray();
 
             foreach ($data as $k => $v) {
@@ -449,7 +449,7 @@ class UserService{
 
         $result = [];
         foreach($member as $k=>$v){
-            $result[$v['target_user_id']][$v['type']][] = $v;
+            $result[$v['date']][$v['target_user_id']][$v['type']][] = $v;
         }
 
         // 用户信息.
@@ -465,17 +465,19 @@ class UserService{
         foreach ($result as $k => $v){
             foreach ($v as $ke => $ve){
                 foreach ($ve as $key => $vel){
-                    $num += $vel['number'];
-                    $numbers += $vel['number'];
+                    foreach ($vel as $key1 => $vel1){
+                        $num += $vel1['number'];
+                        $numbers += $vel1['number'];
+                    }
+                    $result[$k][$ke][$key]['num'] = $num;
+                    $num = 0;
                 }
-                $result[$k][$ke]['num'] = $num;
-                $result[$k]['wechat_id'] = $info[$vel['target_user_id']]['wechat_id'];
-                $result[$k]['phone'] = $info[$vel['target_user_id']]['phone'];
-                $num = 0;
-                $result['numbers'] = $numbers;
-                $result['user_id'] = $userId;
+                $result[$k][$ke]['wechat_id'] = $info[$vel1['target_user_id']]['wechat_id'];
+                $result[$k][$ke]['phone'] = $info[$vel1['target_user_id']]['phone'];
             }
         }
+        $result['numbers'] = $numbers;
+        $result['user_id'] = $userId;
 
         return $result;
     }
@@ -508,10 +510,31 @@ class UserService{
     /**
      * 今日收益
      * @param $userId
-     * @return mixed
+     * @return array
      */
     public function income($userId){
+        $data = [
+            'day' => 10,
+            'month' => 100,
+            'total' => 1000,
+        ];
 
+        return $data;
+    }
+
+    /**
+     * 收益列表
+     * @param $userId
+     * @return array
+     */
+    public function incomeList($userId){
+        $data = [
+            'day' => 10,
+            'month' => 100,
+            'total' => 1000,
+        ];
+
+        return $data;
     }
 
     /**
