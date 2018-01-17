@@ -170,6 +170,23 @@ class UserController extends Controller
     }
 
     /**
+     * 今日新增招募
+     * @param Request $request
+     * @return static
+     */
+    public function nowAdded(Request $request){
+        $userId = $request->user()->id;
+
+        try{
+            $data = (new UserService())->nowAdded($userId);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
+    }
+
+    /**
      * 今日收益
      * @param Request $request
      * @return static

@@ -313,32 +313,34 @@ class InviteCodeService{
         try{
             $InviteCode = new InviteCode();
 
+            // 我的用户信息.
+            $user = User::where("id", $userId)->with('UserInfo')->first();
+            $userArr = $user->toArray();
+            $userCode = $userArr['invite_code'];
+
+            // 当前邀请码级别.
+            $userType = $InviteCode->where([
+                'invite_code' => $userCode
+            ])->first()->toArray();
+
+            if($userType['effective_days'] == '-1'){
+                throw new \LogicException('用户已经是VIP');
+            }
+
             // 验证邀请码有效性.
             $isCode = $InviteCode->where([
                 'invite_code' => $newCode,
+                'user_id' => $userType['user_id'],
+                'status' => InviteCode::STATUS_UNUSE,
                 'effective_days' => -1,
-                'status' => InviteCode::STATUS_UNUSE
             ])->first();
 
             if(!$isCode){
                 throw new \LogicException('邀请码错误');
             }
 
-            // 我的用户信息.
-            $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
-            $userCode = $user['invite_code'];
-
-            // 当前邀请码级别.
-            $userType = $InviteCode->where([
-                'invite_code' => $userCode
-            ])->pluck('effective_days')->first();
-
-            if($userType == '-1'){
-                throw new \LogicException('用户已经是VIP');
-            }
-
             // 生成订单字段.
-            switch ($userType){
+            switch ($userType['effective_days']){
                 case 30:
                     $subtype = 31;
                     break;
@@ -358,7 +360,7 @@ class InviteCodeService{
             $user_name = $user['user_info']['actual_name'];
             $user_grade = $user['grade'] ? : 1;
             $unit_price = CodePrice::where(['duration' => '-1'])->pluck('code_price')->first();
-            $status = 1;
+            $status = 100;
 
             // 创建升级订单.
             $res = Order::create([
@@ -376,7 +378,14 @@ class InviteCodeService{
                 'remark' => $newCode,
             ]);
 
-            if(!$res){
+            if($res){
+                $user->invite_code = $newCode;
+                $user->expiry_time = NUll;
+                $user->save();
+                $isCode->status = InviteCode::STATUS_USED;
+                $isCode->update_time = date('Y-m-d H:i:s');
+                $isCode->save();
+            } else {
                 throw new \LogicException('升级VIP失败');
             }
         }catch (\Exception $e){

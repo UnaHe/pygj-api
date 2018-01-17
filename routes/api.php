@@ -121,6 +121,11 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::get('/member/recruit', "UserController@recruit");
 
         /**
+         * 今日新增招募
+         */
+        Route::get('/member/nowAdded', "UserController@nowAdded");
+
+        /**
          * 获取学员位申请记录
          */
         Route::get('/member/applyList', "UserController@applyList");

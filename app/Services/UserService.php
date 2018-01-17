@@ -464,6 +464,31 @@ class UserService{
     }
 
     /**
+     * 今日新增招募
+     * @param $userId
+     * @return mixed
+     */
+    public function nowAdded($userId){
+        // 初始化时间.
+        $year = date("Y");
+        $month = date("m");
+        $day = date("d");
+        $start = mktime(0,0,0,$month,$day,$year);
+        $end= mktime(23,59,59,$month,$day,$year);
+        $startTime = date('Y-m-d H:i:s', $start);
+        $endTime = date('Y-m-d H:i:s', $end);
+
+        $data = Order::where([
+            ['type', '<=', 2],
+            ['target_user_id', $userId],
+            ['created_at', '>=', $startTime],
+            ['created_at', '<=', $endTime]
+        ])->select(DB::raw('sum(number) as number'))->get();
+
+        return $data;
+    }
+
+    /**
      * 今日收益
      * @param $userId
      * @return mixed
