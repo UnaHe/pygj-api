@@ -298,8 +298,16 @@ class UserService{
         $day = date("d");
         $start = mktime(0,0,0,$month,$day,$year);
         $end= mktime(23,59,59,$month,$day,$year);
-        $startTime = $startTime ? $startTime.' 00:00:00' : date('Y-m-d H:i:s', $start);
-        $endTime = $endTime ? $endTime.' 23:59:59' : date('Y-m-d H:i:s', $end);
+        if($startTime && $endTime){
+            $startTime = $startTime.' 00:00:00';
+            $endTime = $endTime.' 23:59:59';
+        } else if(!$startTime && !$endTime) {
+            $startTime = date('Y-m-d H:i:s', $start);
+            $endTime = date('Y-m-d H:i:s', $end);
+        } else {
+            $endTime = $startTime.' 23:59:59';
+            $startTime = $startTime.' 00:00:00';
+        }
 
         // 查询订单.
         $data = Order::where([
@@ -356,8 +364,16 @@ class UserService{
         $day = date("d");
         $start = mktime(0,0,0,$month,$day,$year);
         $end= mktime(23,59,59,$month,$day,$year);
-        $startTime = $startTime ? $startTime.' 00:00:00' : date('Y-m-d H:i:s', $start);
-        $endTime = $endTime ? $endTime.' 23:59:59' : date('Y-m-d H:i:s', $end);
+        if($startTime && $endTime){
+            $startTime = $startTime.' 00:00:00';
+            $endTime = $endTime.' 23:59:59';
+        } else if(!$startTime && !$endTime) {
+            $startTime = date('Y-m-d H:i:s', $start);
+            $endTime = date('Y-m-d H:i:s', $end);
+        } else {
+            $endTime = $startTime.' 23:59:59';
+            $startTime = $startTime.' 00:00:00';
+        }
 
         $User = new User();
         $InviteCode = new InviteCode();
@@ -457,6 +473,7 @@ class UserService{
                 $result[$k]['phone'] = $info[$vel['target_user_id']]['phone'];
                 $num = 0;
                 $result['numbers'] = $numbers;
+                $result['user_id'] = $userId;
             }
         }
 
