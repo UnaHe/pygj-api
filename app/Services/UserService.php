@@ -296,17 +296,18 @@ class UserService{
         $year = date("Y");
         $month = date("m");
         $day = date("d");
-        $start = mktime(0,0,0,$month-1,$day,$year);
-        $end= mktime(23,59,59,$month+1,$day,$year);
+        $start = mktime(0,0,0,$month,$day,$year);
+        $end= mktime(23,59,59,$month,$day,$year);
         $startTime = $startTime ? $startTime.' 00:00:00' : date('Y-m-d H:i:s', $start);
         $endTime = $endTime ? $endTime.' 23:59:59' : date('Y-m-d H:i:s', $end);
 
         // 查询订单.
         $data = Order::where([
+            ['type', '<=', 2],
             ['target_user_id', $userId],
             ['created_at', '>=', $startTime],
             ['created_at', '<=', $endTime]
-        ])->select(['subtype', 'number', 'user_phone', 'status', 'created_at'])->orderBy('created_at', 'desc');
+        ])->select(['subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
 
         // 分页.
         $data = (new QueryHelper())->pagination($data)->get();
@@ -353,8 +354,8 @@ class UserService{
         $year = date("Y");
         $month = date("m");
         $day = date("d");
-        $start = mktime(0,0,0,$month-1,$day,$year);
-        $end= mktime(23,59,59,$month+1,$day,$year);
+        $start = mktime(0,0,0,$month,$day,$year);
+        $end= mktime(23,59,59,$month,$day,$year);
         $startTime = $startTime ? $startTime.' 00:00:00' : date('Y-m-d H:i:s', $start);
         $endTime = $endTime ? $endTime.' 23:59:59' : date('Y-m-d H:i:s', $end);
 
@@ -373,13 +374,6 @@ class UserService{
         // 我的学员.
         $users = (new QueryHelper())->pagination($query)->get()->toArray();
 
-        // 我的用户信息.
-        $me = $User->where('id', $userId)->with('UserInfo')->first()->toArray();
-        $meInfo['id'] = $me['id'];
-        $meInfo['phone'] = $me['phone'];
-        $meInfo['wechat_id'] = $me['user_info']['wechat_id'];
-        array_push($users, $meInfo);
-
         // 我的学员ID.
         $usersId = [];
         foreach($users as $k=>$v){
@@ -387,12 +381,15 @@ class UserService{
                 $usersId[] = $v['id'];
             }
         }
+        $usersId = array_unique($usersId);
 
         // 学员招募.
         $member = Order::whereIn('target_user_id', $usersId)->where([
+            ['type', '<=', 2],
             ['created_at', '>=', $startTime],
             ['created_at', '<=', $endTime]
-        ])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
+        ])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype']);
+        $member = $member->get()->toArray();
 
         foreach ($member as $k => $v) {
             if (isset(Order::$order_type[$v['type']])) {
@@ -403,18 +400,22 @@ class UserService{
             $member[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
         }
 
-        $result = [];
-        foreach($member as $k=>$v){
-            $result[$v['target_user_id']][$v['type']][] = $v;
-        }
-
         // 我的招募.
         if ($page == 1) {
+            // 我的用户信息.
+            $me = $User->where('id', $userId)->with('UserInfo')->first()->toArray();
+            $meInfo['id'] = $me['id'];
+            $meInfo['phone'] = $me['phone'];
+            $meInfo['wechat_id'] = $me['user_info']['wechat_id'];
+            array_push($users, $meInfo);
+
             $data = Order::where([
+                ['type', '<=', 2],
                 ['target_user_id', $userId],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
-            ])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype'])->get();
+            ])->select(DB::raw('target_user_id, type, subtype, sum(number) as number'))->groupBy(['target_user_id', 'type', 'subtype']);
+            $data = $data->get()->toArray();
 
             foreach ($data as $k => $v) {
                 if (isset(Order::$order_type[$v['type']])) {
@@ -425,10 +426,14 @@ class UserService{
                 $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
             }
 
-            foreach($data as $k=>$v){
-                $result[$v['target_user_id']][$v['type']][] = $v;
-            }
+            foreach ($data as $k => $v){
+                $member[] = $v;
+            };
+        }
 
+        $result = [];
+        foreach($member as $k=>$v){
+            $result[$v['target_user_id']][$v['type']][] = $v;
         }
 
         // 用户信息.

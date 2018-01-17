@@ -76,7 +76,6 @@ class InviteCodeController extends Controller
         $userId = $request->user()->id;
         $phone = $request->input('phone');
         $types = $request->input('types');
-        $num = $request->input('num');
 
         // 判断参数.
         if(!preg_match('/^1\d{10}$/', $phone)){
@@ -85,18 +84,9 @@ class InviteCodeController extends Controller
         if(!preg_match('/^30|90|365$/', $types)){
             return $this->ajaxError('请输入正确的续费类型');
         }
-        if(!preg_match('/^[1-9]\d?\d?\d?$/', $num)){
-            return $this->ajaxError('数量应该为1-9999');
-        }
-        if($types == 30 && $num > 2){
-            return $this->ajaxError('推荐选择更优惠的季付套餐');
-        }
-        if($types == 90 && $num > 3){
-            return $this->ajaxError('推荐选择更优惠的年付套餐');
-        }
 
         try{
-            (new InviteCodeService())->renewFee($userId, $phone, $types, $num);
+            (new InviteCodeService())->renewFee($userId, $phone, $types);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }

@@ -30,16 +30,10 @@ class UserController extends Controller
         $userId = $request->user()->id;
         //分页参数
         $page = $request->get("page",1);
-
-        $params = $request->all();
-        $params['user_id'] = $userId;
-        if(!$data = CacheHelper::getCache($params)){
-            try{
-                $data = (new UserService())->getMyMember($userId, $page);
-                CacheHelper::setCache($data, 1, $params);
-            }catch (\Exception $e){
-                $this->ajaxError("系统错误");
-            }
+        try{
+            $data = (new UserService())->getMyMember($userId, $page);
+        }catch (\Exception $e){
+            $this->ajaxError("系统错误");
         }
         return $this->ajaxSuccess($data);
     }

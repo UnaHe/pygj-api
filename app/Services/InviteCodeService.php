@@ -154,10 +154,9 @@ class InviteCodeService{
      * @param $userId
      * @param $phone
      * @param $type
-     * @param $num
      * @throws \Exception
      */
-    public function renewFee($userId, $phone, $types, $num){
+    public function renewFee($userId, $phone, $types){
         try{
             $User = new User();
             $InviteCode = new InviteCode();
@@ -268,6 +267,7 @@ class InviteCodeService{
             }
 
             $type = Order::ORDER_RENEWFEE;
+            $num = 1;
             $member_phone  = $member['phone'];
             $member_name = $member['user_info']['actual_name'];
             $member_grade = $member['grade'] ? : 1;
