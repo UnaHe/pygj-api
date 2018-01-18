@@ -374,7 +374,7 @@ class UserService{
         $query->select(["user.id", "user.phone", "userinfo.wechat_id"]);
 
         // 我的学员.
-        $users = (new QueryHelper())->pagination($query)->get()->toArray();
+        $users = $query->get()->toArray();
 
         // 我的学员ID.
         $usersId = [];
@@ -391,12 +391,12 @@ class UserService{
                 ['type', '<=', 2],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
-            ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+            ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
         } else if(!$startTime && !$endTime) {
             // 学员招募.
             $member = Order::whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2]
-            ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+            ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
         } else {
             // 初始化时间.
             $endTime = $startTime.' 23:59:59';
@@ -406,18 +406,14 @@ class UserService{
                 ['type', '<=', 2],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
-            ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+            ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
         }
         // 分页.
-        $member = $member->get()->toArray();
+        $member = (new QueryHelper())->pagination($member)->get()->toArray();
 
         foreach ($member as $k => $v) {
-            if (isset(Order::$order_type[$v['type']])) {
-                $member[$k]['type'] = Order::$order_type[$v['type']];
-            } else {
-                unset($member[$k]);
-            }
             $member[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
+            $member[$k]['date'] = explode(' ', $v['created_at'])[0];
         }
 
         // 我的招募.
@@ -439,13 +435,13 @@ class UserService{
                     ['target_user_id', $userId],
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
-                ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+                ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
             } else if(!$startTime && !$endTime) {
                 // 我的招募.
                 $data = Order::where([
                     ['type', '<=', 2],
                     ['target_user_id', $userId]
-                ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+                ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
             } else {
                 // 初始化时间.
                 $endTime = $startTime.' 23:59:59';
@@ -456,18 +452,14 @@ class UserService{
                     ['target_user_id', $userId],
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
-                ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+                ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
             }
             // 分页.
             $data = (new QueryHelper())->pagination($data)->get()->toArray();
 
             foreach ($data as $k => $v) {
-                if (isset(Order::$order_type[$v['type']])) {
-                    $data[$k]['type'] = Order::$order_type[$v['type']];
-                } else {
-                    unset($data[$k]);
-                }
                 $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
+                $data[$k]['date'] = explode(' ', $v['created_at'])[0];
             }
 
             foreach ($data as $k => $v){

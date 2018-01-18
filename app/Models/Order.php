@@ -34,12 +34,12 @@ class Order extends Model
      */
     const ORDER_EXTRACT = 4;
 
-    // 订单类别.
+    // 订单类型.
     static $order_type = [
         1 => '我的招募申请',
-        2 => '学员变更申请',
-        3 => '学员变更申请',
-        4 => '提现'
+        2 => '学员续费申请',
+        3 => '转VIP申请',
+        4 => '提现申请'
     ];
 
     // 订单子类别.
