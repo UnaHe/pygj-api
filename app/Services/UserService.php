@@ -501,12 +501,14 @@ class UserService{
                     foreach ($vel as $key1 => $vel1){
                         $num += $vel1['number'];
                         $numbers += $vel1['number'];
+                        $result[$k][$ke][$key][$key1]['wechat_id'] = $info[$vel1['target_user_id']]['wechat_id'];
+                        $result[$k][$ke][$key][$key1]['phone'] = $info[$vel1['target_user_id']]['phone'];
                     }
                     $result[$k][$ke][$key]['num'] = $num;
                     $num = 0;
                 }
-                $result[$k][$ke]['wechat_id'] = $info[$vel1['target_user_id']]['wechat_id'];
-                $result[$k][$ke]['phone'] = $info[$vel1['target_user_id']]['phone'];
+//                $result[$k][$ke]['wechat_id'] = $info[$vel1['target_user_id']]['wechat_id'];
+//                $result[$k][$ke]['phone'] = $info[$vel1['target_user_id']]['phone'];
             }
         }
         $result['numbers'] = $numbers;
