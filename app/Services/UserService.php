@@ -379,11 +379,8 @@ class UserService{
         // 我的学员ID.
         $usersId = [];
         foreach($users as $k=>$v){
-            foreach($v as $key=>$val){
-                $usersId[] = $v['id'];
-            }
+            $usersId[] = $v['id'];
         }
-        $usersId = array_unique($usersId);
 
         if($startTime && $endTime){
             // 初始化时间.
@@ -412,7 +409,7 @@ class UserService{
             ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
         }
         // 分页.
-        $member = (new QueryHelper())->pagination($member)->get()->toArray();
+        $member = $member->get()->toArray();
 
         foreach ($member as $k => $v) {
             if (isset(Order::$order_type[$v['type']])) {

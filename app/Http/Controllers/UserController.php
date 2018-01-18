@@ -166,12 +166,12 @@ class UserController extends Controller
         //分页参数
         $page = $request->get("page",1);
 
-        try{
-            $data = (new UserService())->recruit($userId, $page, $startTime, $endTime);
-        }catch (\Exception $e){
-            return $this->ajaxError($e->getMessage());
-        }
-
+//        try{
+//            $data = (new UserService())->recruit($userId, $page, $startTime, $endTime);
+//        }catch (\Exception $e){
+//            return $this->ajaxError($e->getMessage());
+//        }
+        $data = (new UserService())->recruit($userId, $page, $startTime, $endTime);
         return $this->ajaxSuccess($data);
     }
 
