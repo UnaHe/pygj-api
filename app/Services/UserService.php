@@ -395,13 +395,11 @@ class UserService{
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
             ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
-            $member = $member->get()->toArray();
         } else if(!$startTime && !$endTime) {
             // 学员招募.
             $member = Order::whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2]
             ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
-            $member = $member->get()->toArray();
         } else {
             // 初始化时间.
             $endTime = $startTime.' 23:59:59';
@@ -412,8 +410,9 @@ class UserService{
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
             ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
-            $member = $member->get()->toArray();
         }
+        // 分页.
+        $member = (new QueryHelper())->pagination($member)->get()->toArray();
 
         foreach ($member as $k => $v) {
             if (isset(Order::$order_type[$v['type']])) {
@@ -444,14 +443,12 @@ class UserService{
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
                 ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
-                $data = $data->get()->toArray();
             } else if(!$startTime && !$endTime) {
                 // 我的招募.
                 $data = Order::where([
                     ['type', '<=', 2],
                     ['target_user_id', $userId]
                 ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
-                $data = $data->get()->toArray();
             } else {
                 // 初始化时间.
                 $endTime = $startTime.' 23:59:59';
@@ -463,8 +460,9 @@ class UserService{
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
                 ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
-                $data = $data->get()->toArray();
             }
+            // 分页.
+            $data = (new QueryHelper())->pagination($data)->get()->toArray();
 
             foreach ($data as $k => $v) {
                 if (isset(Order::$order_type[$v['type']])) {
