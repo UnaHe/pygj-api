@@ -292,30 +292,33 @@ class UserService{
      * @return mixed
      */
     public function applyList($userId, $startTime='', $endTime=''){
-        // 初始化时间.
-        $year = date("Y");
-        $month = date("m");
-        $day = date("d");
-        $start = mktime(0,0,0,$month,$day,$year);
-        $end= mktime(23,59,59,$month,$day,$year);
         if($startTime && $endTime){
             $startTime = $startTime.' 00:00:00';
             $endTime = $endTime.' 23:59:59';
+            // 查询时间范围订单.
+            $data = Order::where([
+                ['type', '<=', 2],
+                ['target_user_id', $userId],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->select(['subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
         } else if(!$startTime && !$endTime) {
-            $startTime = date('Y-m-d H:i:s', $start);
-            $endTime = date('Y-m-d H:i:s', $end);
+            // 查询订单.
+            $data = Order::where([
+                ['type', '<=', 2],
+                ['target_user_id', $userId]
+            ])->select(['subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
         } else {
             $endTime = $startTime.' 23:59:59';
             $startTime = $startTime.' 00:00:00';
+            // 查询单天订单.
+            $data = Order::where([
+                ['type', '<=', 2],
+                ['target_user_id', $userId],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->select(['subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
         }
-
-        // 查询订单.
-        $data = Order::where([
-            ['type', '<=', 2],
-            ['target_user_id', $userId],
-            ['created_at', '>=', $startTime],
-            ['created_at', '<=', $endTime]
-        ])->select(['subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
 
         // 分页.
         $data = (new QueryHelper())->pagination($data)->get();
@@ -358,23 +361,6 @@ class UserService{
      * @return mixed
      */
     public function recruit($userId, $page=1, $startTime='', $endTime=''){
-        // 初始化时间.
-        $year = date("Y");
-        $month = date("m");
-        $day = date("d");
-        $start = mktime(0,0,0,$month,$day,$year);
-        $end= mktime(23,59,59,$month,$day,$year);
-        if($startTime && $endTime){
-            $startTime = $startTime.' 00:00:00';
-            $endTime = $endTime.' 23:59:59';
-        } else if(!$startTime && !$endTime) {
-            $startTime = date('Y-m-d H:i:s', $start);
-            $endTime = date('Y-m-d H:i:s', $end);
-        } else {
-            $endTime = $startTime.' 23:59:59';
-            $startTime = $startTime.' 00:00:00';
-        }
-
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
@@ -399,13 +385,35 @@ class UserService{
         }
         $usersId = array_unique($usersId);
 
-        // 学员招募.
-        $member = Order::whereIn('target_user_id', $usersId)->where([
-            ['type', '<=', 2],
-            ['created_at', '>=', $startTime],
-            ['created_at', '<=', $endTime]
-        ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
-        $member = $member->get()->toArray();
+        if($startTime && $endTime){
+            // 初始化时间.
+            $startTime = $startTime.' 00:00:00';
+            $endTime = $endTime.' 23:59:59';
+            // 时间段学员招募.
+            $member = Order::whereIn('target_user_id', $usersId)->where([
+                ['type', '<=', 2],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+            $member = $member->get()->toArray();
+        } else if(!$startTime && !$endTime) {
+            // 学员招募.
+            $member = Order::whereIn('target_user_id', $usersId)->where([
+                ['type', '<=', 2]
+            ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+            $member = $member->get()->toArray();
+        } else {
+            // 初始化时间.
+            $endTime = $startTime.' 23:59:59';
+            $startTime = $startTime.' 00:00:00';
+            // 单天学员招募.
+            $member = Order::whereIn('target_user_id', $usersId)->where([
+                ['type', '<=', 2],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+            $member = $member->get()->toArray();
+        }
 
         foreach ($member as $k => $v) {
             if (isset(Order::$order_type[$v['type']])) {
@@ -425,13 +433,38 @@ class UserService{
             $meInfo['wechat_id'] = $me['user_info']['wechat_id'];
             array_push($users, $meInfo);
 
-            $data = Order::where([
-                ['type', '<=', 2],
-                ['target_user_id', $userId],
-                ['created_at', '>=', $startTime],
-                ['created_at', '<=', $endTime]
-            ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
-            $data = $data->get()->toArray();
+            if($startTime && $endTime){
+                // 初始化时间.
+                $startTime = $startTime.' 00:00:00';
+                $endTime = $endTime.' 23:59:59';
+                // 我的时间段招募.
+                $data = Order::where([
+                    ['type', '<=', 2],
+                    ['target_user_id', $userId],
+                    ['created_at', '>=', $startTime],
+                    ['created_at', '<=', $endTime]
+                ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+                $data = $data->get()->toArray();
+            } else if(!$startTime && !$endTime) {
+                // 我的招募.
+                $data = Order::where([
+                    ['type', '<=', 2],
+                    ['target_user_id', $userId]
+                ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+                $data = $data->get()->toArray();
+            } else {
+                // 初始化时间.
+                $endTime = $startTime.' 23:59:59';
+                $startTime = $startTime.' 00:00:00';
+                // 我的单天招募.
+                $data = Order::where([
+                    ['type', '<=', 2],
+                    ['target_user_id', $userId],
+                    ['created_at', '>=', $startTime],
+                    ['created_at', '<=', $endTime]
+                ])->select(DB::raw("target_user_id, type, subtype, sum(number) as number, DATE_FORMAT(created_at,'%Y-%m-%d') as date"))->groupBy(['target_user_id', 'type', 'subtype', 'date'])->orderBy('date', 'desc');
+                $data = $data->get()->toArray();
+            }
 
             foreach ($data as $k => $v) {
                 if (isset(Order::$order_type[$v['type']])) {
@@ -478,6 +511,7 @@ class UserService{
         }
         $result['numbers'] = $numbers;
         $result['user_id'] = $userId;
+        $result['servertime'] = time();
 
         return $result;
     }
