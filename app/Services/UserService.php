@@ -506,9 +506,11 @@ class UserService{
                     }
                     $result[$k][$ke][$key]['num'] = $num;
                     $num = 0;
+                    $result[$k][$ke][$key]['wechat_id'] = $info[$vel1['target_user_id']]['wechat_id'];
+                    $result[$k][$ke][$key]['phone'] = $info[$vel1['target_user_id']]['phone'];
                 }
-                $result[$k][$ke]['wechat_id'] = $info[$vel1['target_user_id']]['wechat_id'];
-                $result[$k][$ke]['phone'] = $info[$vel1['target_user_id']]['phone'];
+//                $result[$k][$ke]['wechat_id'] = $info[$vel1['target_user_id']]['wechat_id'];
+//                $result[$k][$ke]['phone'] = $info[$vel1['target_user_id']]['phone'];
             }
         }
         $result['numbers'] = $numbers;
