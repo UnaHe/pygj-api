@@ -230,6 +230,29 @@ class UserController extends Controller
     }
 
     /**
+     * 收益备注
+     * @param Request $request
+     * @return static
+     */
+    public function incomeRemark(Request $request){
+        $userId = $request->user()->id;
+        $incomeId = $request->input('income_id');
+        $remark = $request->input('remark');
+
+        if(!$remark){
+            return $this->ajaxError("参数错误");
+        }
+
+        try{
+            $data = (new UserService())->incomeRemark($userId, $incomeId, $remark);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
+    }
+
+    /**
      * 提现申请
      * @param Request $request
      * @return static

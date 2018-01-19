@@ -14,16 +14,18 @@ use App\Models\User;
 use App\Models\UserInfo;
 use App\Models\UserLevelConfig;
 use App\Models\FriendRemark;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
+use App\Models\UserIncome;
+use Carbon\Carbon;
 
 class UserService{
     /**
      * 获取用户等级信息
      * @param $userId
      * @return array
+     * @throws \Exception
      */
     public function getUserLevel($userId){
         if($data = CacheHelper::getCache()){
@@ -302,13 +304,13 @@ class UserService{
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
             ])->select(['subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
-        } else if(!$startTime && !$endTime) {
+        }else if(!$startTime && !$endTime) {
             // 查询订单.
             $data = Order::where([
                 ['type', '<=', 2],
                 ['target_user_id', $userId]
             ])->select(['subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
-        } else {
+        }else{
             $endTime = $startTime.' 23:59:59';
             $startTime = $startTime.' 00:00:00';
             // 查询单天订单.
@@ -364,6 +366,7 @@ class UserService{
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
+        $Order = new Order();
 
         $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
             'invite.user_id' => $userId,
@@ -387,22 +390,22 @@ class UserService{
             $startTime = $startTime.' 00:00:00';
             $endTime = $endTime.' 23:59:59';
             // 时间段学员招募.
-            $member = Order::whereIn('target_user_id', $usersId)->where([
+            $member = $Order->whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
             ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
-        } else if(!$startTime && !$endTime) {
+        }else if(!$startTime && !$endTime) {
             // 学员招募.
-            $member = Order::whereIn('target_user_id', $usersId)->where([
+            $member = $Order->whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2]
             ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
-        } else {
+        }else{
             // 初始化时间.
             $endTime = $startTime.' 23:59:59';
             $startTime = $startTime.' 00:00:00';
             // 单天学员招募.
-            $member = Order::whereIn('target_user_id', $usersId)->where([
+            $member = $Order->whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
@@ -430,24 +433,24 @@ class UserService{
                 $startTime = $startTime.' 00:00:00';
                 $endTime = $endTime.' 23:59:59';
                 // 我的时间段招募.
-                $data = Order::where([
+                $data = $Order->where([
                     ['type', '<=', 2],
                     ['target_user_id', $userId],
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
                 ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
-            } else if(!$startTime && !$endTime) {
+            }else if(!$startTime && !$endTime) {
                 // 我的招募.
-                $data = Order::where([
+                $data = $Order->where([
                     ['type', '<=', 2],
                     ['target_user_id', $userId]
                 ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
-            } else {
+            }else{
                 // 初始化时间.
                 $endTime = $startTime.' 23:59:59';
                 $startTime = $startTime.' 00:00:00';
                 // 我的单天招募.
-                $data = Order::where([
+                $data = $Order->where([
                     ['type', '<=', 2],
                     ['target_user_id', $userId],
                     ['created_at', '>=', $startTime],
@@ -510,20 +513,15 @@ class UserService{
      */
     public function nowAdded($userId){
         // 初始化时间.
-        $year = date("Y");
-        $month = date("m");
-        $day = date("d");
-        $start = mktime(0,0,0,$month,$day,$year);
-        $end= mktime(23,59,59,$month,$day,$year);
-        $startTime = date('Y-m-d H:i:s', $start);
-        $endTime = date('Y-m-d H:i:s', $end);
+        $startTime = (new Carbon())->startOfDay()->toDateTimeString();
+        $endTime = (new Carbon())->endOfDay()->toDateTimeString();
 
         $data = Order::where([
             ['type', '<=', 2],
             ['target_user_id', $userId],
             ['created_at', '>=', $startTime],
             ['created_at', '<=', $endTime]
-        ])->select(DB::raw('sum(number) as number'))->get();
+        ])->sum('number');
 
         return $data;
     }
@@ -534,10 +532,36 @@ class UserService{
      * @return array
      */
     public function income($userId){
+        $UserIncome = new UserIncome();
+        $Carbon = new Carbon();
+
+        $startTime = $Carbon->startOfDay()->toDateTimeString();
+        $endTime = $Carbon->endOfDay()->toDateTimeString();
+
+        // 当天收益.
+        $day = $UserIncome->where([
+            ['user_id', $userId],
+            ['created_at', '>=', $startTime],
+            ['created_at', '<=', $endTime]
+        ])->sum('income_num');
+
+        $startTime = $Carbon->startOfMonth()->toDateTimeString();
+        $endTime = $Carbon->endOfMonth()->toDateTimeString();
+
+        // 当月收益.
+        $month = $UserIncome->where([
+            ['user_id', $userId],
+            ['created_at', '>=', $startTime],
+            ['created_at', '<=', $endTime]
+        ])->sum('income_num');
+
+        // 总计收益.
+        $total = $UserIncome->where([['user_id', $userId]])->sum('income_num');
+
         $data = [
-            'day' => 10,
-            'month' => 100,
-            'total' => 1000,
+            'day' => $day,
+            'month' => $month,
+            'total' => $total
         ];
 
         return $data;
@@ -552,21 +576,54 @@ class UserService{
      * @return array
      */
     public function incomeList($userId, $type, $startTime, $endTime){
-        $data = [
-            [
-                'type' => 1,
-                'money' => 100,
-                'remark' => '33332'
-            ],
-            [
-                'type' => 2,
-                'money' => 800,
-                'remark' => '33332'
-            ],
-            'numbers' => 2100
-        ];
+        $Carbon = new Carbon();
+
+        if($type == 1){
+            // 今日收益.
+            $startTime = $Carbon->startOfDay()->toDateTimeString();
+            $endTime = $Carbon->endOfDay()->toDateTimeString();
+        }else if($type == 2){
+            // 本月收益.
+            $startTime = $Carbon->startOfMonth()->toDateTimeString();
+            $endTime = $Carbon->endOfMonth()->toDateTimeString();
+        }
+
+        // type为0,时间段收益.
+        $data = UserIncome::where([
+            ['user_id', $userId],
+            ['created_at', '>=', $startTime],
+            ['created_at', '<=', $endTime]
+        ])->select(['type', 'income_num', 'remark'])->orderBy('created_at', 'desc')->get();
 
         return $data;
+    }
+
+    /**
+     * 收益备注
+     * @param $userId
+     * @param $incomeId
+     * @param $remark
+     * @return mixed
+     * @throws \Exception
+     */
+    public function incomeRemark($userId, $incomeId, $remark){
+        try{
+            $res = UserIncome::where(['id' => $incomeId, 'user_id' => $userId])->first();
+
+            if(!$res){
+                throw new \LogicException('记录不存在');
+            }
+
+            $res->remark = $remark;
+            return $res->save();
+        }catch (\Exception $e){
+            if($e instanceof \LogicException){
+                $error = $e->getMessage();
+            }else{
+                $error = '备注失败';
+            }
+            throw new \Exception($error);
+        }
     }
 
     /**

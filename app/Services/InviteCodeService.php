@@ -153,7 +153,7 @@ class InviteCodeService{
      * 续费
      * @param $userId
      * @param $phone
-     * @param $type
+     * @param $types
      * @throws \Exception
      */
     public function renewFee($userId, $phone, $types){
@@ -306,7 +306,7 @@ class InviteCodeService{
     /**
      * 升级VIP
      * @param $userId
-     * @param $phone
+     * @param $newCode
      * @throws \Exception
      */
     public function upVip($userId, $newCode){

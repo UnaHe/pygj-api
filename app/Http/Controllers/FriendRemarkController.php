@@ -18,7 +18,7 @@ class FriendRemarkController extends Controller
         $friend_user_id = $request->input('friend_user_id');
         $remark = $request->input('remark');
 
-        if(!$friend_user_id){
+        if(!$remark){
             return $this->ajaxError("参数错误");
         }
 
