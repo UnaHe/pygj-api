@@ -546,13 +546,24 @@ class UserService{
     /**
      * 收益列表
      * @param $userId
+     * @param $type
+     * @param $startTime
+     * @param $endTime
      * @return array
      */
-    public function incomeList($userId){
+    public function incomeList($userId, $type, $startTime, $endTime){
         $data = [
-            'day' => 10,
-            'month' => 100,
-            'total' => 1000,
+            [
+                'type' => 1,
+                'money' => 100,
+                'remark' => '33332'
+            ],
+            [
+                'type' => 2,
+                'money' => 800,
+                'remark' => '33332'
+            ],
+            'numbers' => 2100
         ];
 
         return $data;

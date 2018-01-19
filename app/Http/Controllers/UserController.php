@@ -166,12 +166,12 @@ class UserController extends Controller
         //分页参数
         $page = $request->get("page",1);
 
-//        try{
-//            $data = (new UserService())->recruit($userId, $page, $startTime, $endTime);
-//        }catch (\Exception $e){
-//            return $this->ajaxError($e->getMessage());
-//        }
-        $data = (new UserService())->recruit($userId, $page, $startTime, $endTime);
+        try{
+            $data = (new UserService())->recruit($userId, $page, $startTime, $endTime);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
         return $this->ajaxSuccess($data);
     }
 
@@ -216,9 +216,12 @@ class UserController extends Controller
      */
     public function incomeList(Request $request){
         $userId = $request->user()->id;
+        $type = $request->input('type');
+        $startTime = $request->input('start_time');
+        $endTime = $request->input('end_time');
 
         try{
-            $data = (new UserService())->incomeList($userId);
+            $data = (new UserService())->incomeList($userId, $type, $startTime, $endTime);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }
