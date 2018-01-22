@@ -143,7 +143,7 @@ class InviteCodeService{
                 $str .= $vel.',';
             }
             $res[$kk]['effective_days'] = $k;
-            $res[$kk]['invite_code'] = rtrim($str, ','); ;
+            $res[$kk]['invite_code'] = rtrim($str, ',');
             $res[$kk]['num'] = $num;
             $str = '';
             $num = 0;
@@ -175,7 +175,7 @@ class InviteCodeService{
             $memberCode = $member['invite_code'];
 
             // 是否自己续费.
-            if(!$member_id == $userId){
+            if(!($member_id == $userId)){
                 $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
                     'invite.user_id' => $userId,
                     'invite.status' => InviteCode::STATUS_USED
@@ -198,12 +198,14 @@ class InviteCodeService{
             // 当前邀请码级别.
             $memberType = $InviteCode->where(['invite_code' => $memberCode])->pluck('effective_days')->first();
 
-            if($memberType == '-1'){
-                throw new \LogicException('用户已经是VIP');
-            }
-
             // 生成订单字段.
             switch ($memberType){
+                case -1:
+                    throw new \LogicException('用户已经是VIP');
+                    break;
+                case 5 :
+                    throw new \LogicException('试用用户不支持续费');
+                    break;
                 case 30:
                     switch ($types){
                         case 30:
@@ -248,22 +250,6 @@ class InviteCodeService{
                             break;
                         case 365:
                             $subtype = 29;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
-                            break;
-                    }
-                    break;
-                case 5:
-                    switch ($types){
-                        case 30:
-                            $subtype = 201;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
-                            break;
-                        case 90:
-                            $subtype = 202;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
-                            break;
-                        case 365:
-                            $subtype = 203;
                             $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                             break;
                     }
@@ -320,21 +306,23 @@ class InviteCodeService{
             // 我的用户信息.
             $user = User::where("id", $userId)->with('UserInfo')->first();
             $userArr = $user->toArray();
-            $userCode = $userArr['invite_code'];
+            $userOldCode = $userArr['invite_code'];
 
             // 当前邀请码级别.
-            $userType = $InviteCode->where([
-                'invite_code' => $userCode
+            $userCode = $InviteCode->where([
+                'invite_code' => $userOldCode
             ])->first()->toArray();
 
-            if($userType['effective_days'] == '-1'){
+            $userCodeType = $userCode['effective_days'];
+
+            if($userCodeType == '-1'){
                 throw new \LogicException('用户已经是VIP');
             }
 
             // 验证邀请码有效性.
             $isCode = $InviteCode->where([
                 'invite_code' => $newCode,
-                'user_id' => $userType['user_id'],
+                'user_id' => $userCode['user_id'],
                 'status' => InviteCode::STATUS_UNUSE,
                 'effective_days' => -1,
             ])->first();
@@ -343,19 +331,73 @@ class InviteCodeService{
                 throw new \LogicException('邀请码错误');
             }
 
+            $newCodeType = $isCode['effective_days'];
+
             // 生成订单字段.
-            switch ($userType['effective_days']){
+            switch ($userCodeType){
+                case 5:
+                    switch ($newCodeType){
+                        case 30:
+                            $subtype = 301;
+                            break;
+                        case 90:
+                            $subtype = 302;
+                            break;
+                        case 365:
+                            $subtype = 303;
+                            break;
+                        case -1:
+                            $subtype = 304;
+                            break;
+                    }
+                    break;
                 case 30:
-                    $subtype = 31;
+                    switch ($newCodeType){
+                        case 30:
+                            $subtype = 305;
+                            break;
+                        case 90:
+                            $subtype = 306;
+                            break;
+                        case 365:
+                            $subtype = 307;
+                            break;
+                        case -1:
+                            $subtype = 308;
+                            break;
+                    }
                     break;
                 case 90:
-                    $subtype = 32;
+                    switch ($newCodeType){
+                        case 30:
+                            $subtype = 309;
+                            break;
+                        case 90:
+                            $subtype = 310;
+                            break;
+                        case 365:
+                            $subtype = 311;
+                            break;
+                        case -1:
+                            $subtype = 312;
+                            break;
+                    }
                     break;
                 case 365:
-                    $subtype = 33;
-                    break;
-                case 5:
-                    $subtype = 34;
+                    switch ($newCodeType){
+                        case 30:
+                            $subtype = 313;
+                            break;
+                        case 90:
+                            $subtype = 314;
+                            break;
+                        case 365:
+                            $subtype = 315;
+                            break;
+                        case -1:
+                            $subtype = 316;
+                            break;
+                    }
                     break;
             }
             $type = Order::ORDER_UPVIP;
