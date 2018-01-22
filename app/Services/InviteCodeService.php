@@ -126,27 +126,31 @@ class InviteCodeService{
         $data =  InviteCode::where([
             'user_id' => $userId,
             'status' => InviteCode::STATUS_UNUSE
-        ])->select(DB::raw('effective_days, GROUP_CONCAT(invite_code)as list, count(*) as num'))->groupBy('effective_days')->get();
+        ])->select(['effective_days','invite_code'])->get();
 
-        // 计算邀请码级别.
-        foreach ($data as $k=>$v){
-            switch ($v['effective_days']){
-                case -1:
-                    $data[$k]['level'] = 'VIP';
-                    break;
-                case 30:
-                    $data[$k]['level'] = '月付';
-                    break;
-                case 90:
-                    $data[$k]['level'] = '季付';
-                    break;
-                case 365:
-                    $data[$k]['level'] = '年付';
-                    break;
-            }
+        $result = [];
+        foreach($data as $k=>$v){
+            $result[$v['effective_days']][] = $v['invite_code'];
         }
 
-        return $data;
+        $num = 0;
+        $str = '';
+        $res = [];
+        $kk = 0;
+        foreach($result as $k=>$v){
+            foreach($v as $key=>$vel){
+                $num++;
+                $str .= $vel.',';
+            }
+            $res[$kk]['effective_days'] = $k;
+            $res[$kk]['invite_code'] = rtrim($str, ','); ;
+            $res[$kk]['num'] = $num;
+            $str = '';
+            $num = 0;
+            $kk++;
+        }
+
+        return $res;
     }
 
     /**

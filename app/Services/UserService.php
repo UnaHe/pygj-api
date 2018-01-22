@@ -593,7 +593,15 @@ class UserService{
             ['user_id', $userId],
             ['created_at', '>=', $startTime],
             ['created_at', '<=', $endTime]
-        ])->select(['type', 'income_num', 'remark'])->orderBy('created_at', 'desc')->get();
+        ])->select(['type', 'income_num', 'remark'])->orderBy('created_at', 'desc');
+        $data = $data->get()->toArray();
+
+        $numbers = 0;
+        foreach($data as $k => $v){
+            $numbers +=$v['income_num'];
+        }
+
+        $data['numbers'] = $numbers;
 
         return $data;
     }
