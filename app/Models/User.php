@@ -34,6 +34,7 @@ class User extends Authenticatable
      * passport查找用户
      * @param $login
      * @return mixed
+     * @throws OAuthServerException
      */
     public function findForPassport($login){
         $user = $this->where('phone', $login)->first();

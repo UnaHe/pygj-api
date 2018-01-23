@@ -61,23 +61,18 @@ class InviteCodeService{
             switch ($types){
                 case -1:
                     $subtype = 14;
-                    $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                     break;
                 case 30:
                     $subtype = 11;
-                    $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                     break;
                 case 90:
                     $subtype = 12;
-                    $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                     break;
                 case 365:
                     $subtype = 13;
-                    $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                     break;
                 case 5:
                     $subtype = 15;
-                    $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                     break;
             }
 
@@ -85,6 +80,7 @@ class InviteCodeService{
             $user_phone  = $user['phone'];
             $user_name = $user['user_info']['actual_name'];
             $user_grade = $user['grade'] ? : 1;
+            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
             $total_price = $unit_price * $num;
             $status = 1;
 
@@ -210,15 +206,12 @@ class InviteCodeService{
                     switch ($types){
                         case 30:
                             $subtype = 21;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                             break;
                         case 90:
                             $subtype = 22;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                             break;
                         case 365:
                             $subtype = 23;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                             break;
                     }
                     break;
@@ -226,15 +219,12 @@ class InviteCodeService{
                     switch ($types){
                         case 30:
                             $subtype = 24;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                             break;
                         case 90:
                             $subtype = 25;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                             break;
                         case 365:
                             $subtype = 26;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                             break;
                     }
                     break;
@@ -242,15 +232,12 @@ class InviteCodeService{
                     switch ($types){
                         case 30:
                             $subtype = 27;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                             break;
                         case 90:
                             $subtype = 28;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                             break;
                         case 365:
                             $subtype = 29;
-                            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
                             break;
                     }
                     break;
@@ -261,6 +248,7 @@ class InviteCodeService{
             $member_phone  = $member['phone'];
             $member_name = $member['user_info']['actual_name'];
             $member_grade = $member['grade'] ? : 1;
+            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
             $total_price = $unit_price * $num;
             $status = 1;
 
@@ -324,13 +312,27 @@ class InviteCodeService{
                 'invite_code' => $newCode,
                 'user_id' => $userCode['user_id'],
                 'status' => InviteCode::STATUS_UNUSE,
-                'effective_days' => -1,
+                ['effective_days', '<>', 5]
             ])->first();
 
             if(!$isCode){
                 throw new \LogicException('邀请码错误');
             }
 
+            // 用户过期时间.
+            $expiryTime = strtotime($userArr['expiry_time']);
+            if($expiryTime){
+                $year = date("Y", $expiryTime);
+                $month = date("m", $expiryTime);
+                $day = date("d", $expiryTime);
+            }else{
+                $year = date("Y");
+                $month = date("m");
+                $day = date("d");
+            }
+            $endTime = mktime(23,59,59,$month,$day,$year);
+
+            // 新邀请码级别.
             $newCodeType = $isCode['effective_days'];
 
             // 生成订单字段.
@@ -339,15 +341,23 @@ class InviteCodeService{
                     switch ($newCodeType){
                         case 30:
                             $subtype = 301;
+                            $remark = "原始试用[{$userOldCode}]升级为月码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 2592000);
                             break;
                         case 90:
                             $subtype = 302;
+                            $remark = "原始试用[{$userOldCode}]升级为季码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 7776000);
                             break;
                         case 365:
                             $subtype = 303;
+                            $remark = "原始试用[{$userOldCode}]升级为年码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 31536000);
                             break;
                         case -1:
                             $subtype = 304;
+                            $remark = "原始试用[{$userOldCode}]升级为终码[{$newCode}]";
+                            $newEndTime = NULL;
                             break;
                     }
                     break;
@@ -355,15 +365,23 @@ class InviteCodeService{
                     switch ($newCodeType){
                         case 30:
                             $subtype = 305;
+                            $remark = "原始月码[{$userOldCode}]升级为月码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 2592000);
                             break;
                         case 90:
                             $subtype = 306;
+                            $remark = "原始月码[{$userOldCode}]升级为季码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 7776000);
                             break;
                         case 365:
                             $subtype = 307;
+                            $remark = "原始月码[{$userOldCode}]升级为年码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 31536000);
                             break;
                         case -1:
                             $subtype = 308;
+                            $remark = "原始月码[{$userOldCode}]升级为终码[{$newCode}]";
+                            $newEndTime = NULL;
                             break;
                     }
                     break;
@@ -371,15 +389,23 @@ class InviteCodeService{
                     switch ($newCodeType){
                         case 30:
                             $subtype = 309;
+                            $remark = "原始季码[{$userOldCode}]升级为月码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 2592000);
                             break;
                         case 90:
                             $subtype = 310;
+                            $remark = "原始季码[{$userOldCode}]升级为季码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 7776000);
                             break;
                         case 365:
                             $subtype = 311;
+                            $remark = "原始季码[{$userOldCode}]升级为年码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 31536000);
                             break;
                         case -1:
                             $subtype = 312;
+                            $remark = "原始季码[{$userOldCode}]升级为终码[{$newCode}]";
+                            $newEndTime = NULL;
                             break;
                     }
                     break;
@@ -387,25 +413,33 @@ class InviteCodeService{
                     switch ($newCodeType){
                         case 30:
                             $subtype = 313;
+                            $remark = "原始年码[{$userOldCode}]升级为月码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 2592000);
                             break;
                         case 90:
                             $subtype = 314;
+                            $remark = "原始年码[{$userOldCode}]升级为季码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 7776000);
                             break;
                         case 365:
                             $subtype = 315;
+                            $remark = "原始年码[{$userOldCode}]升级为年码[{$newCode}]";
+                            $newEndTime = date('Y-m-d H:i:s', $endTime + 31536000);
                             break;
                         case -1:
                             $subtype = 316;
+                            $remark = "原始年码[{$userOldCode}]升级为终码[{$newCode}]";
+                            $newEndTime = NULL;
                             break;
                     }
                     break;
             }
             $type = Order::ORDER_UPVIP;
             $number = 1;
-            $user_phone  = $user['phone'];
-            $user_name = $user['user_info']['actual_name'];
-            $user_grade = $user['grade'] ? : 1;
-            $unit_price = CodePrice::where(['duration' => '-1'])->pluck('code_price')->first();
+            $user_phone  = $userArr['phone'];
+            $user_name = $userArr['user_info']['actual_name'];
+            $user_grade = $userArr['grade'] ? : 1;
+            $unit_price = CodePrice::where(['duration' => $newCodeType])->pluck('code_price')->first();
             $status = 100;
 
             // 创建升级订单.
@@ -421,12 +455,12 @@ class InviteCodeService{
                 'unit_price' => $unit_price,
                 'total_price' => $unit_price,
                 'status' => $status,
-                'remark' => $newCode,
+                'remark' => $remark,
             ]);
 
             if($res){
                 $user->invite_code = $newCode;
-                $user->expiry_time = NUll;
+                $user->expiry_time = $newEndTime;
                 $user->save();
                 $isCode->status = InviteCode::STATUS_USED;
                 $isCode->update_time = date('Y-m-d H:i:s');
