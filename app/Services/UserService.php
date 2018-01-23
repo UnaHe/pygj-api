@@ -37,21 +37,21 @@ class UserService{
         $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
         // 账户等级.
         $grade = $user['grade'] ? : 1;
-        $gradeConfig = $UserLevelConfig->where("id", $grade)->first();
+        $gradeConfig = $UserLevelConfig->where("grade_id", $grade)->first();
         if(!$gradeConfig){
             Log::error("用户等级{$grade}未配置");
             throw new \Exception("系统错误");
         }
         // 当前等级.
         $gradeDesc = $gradeConfig['name'];
-        $gradePic = 'http://'.config('domains.pygj_domains').$gradeConfig['grede_pic'];
+        $gradePic = 'http://'.config('domains.pygj_domains').$gradeConfig['grade_pic'];
         $isTop = $gradeConfig['is_top'];
         // 升级需要数量.
         $upgradeNeedNum = $user['user_info']['upgrade'] ? : 12;
 
         // 升级等级.
         $upgradeGrade = ($grade + 1) <= 3 ? $grade + 1 : 3;
-        $upgrade = $UserLevelConfig->where("id", $upgradeGrade)->first();
+        $upgrade = $UserLevelConfig->where("grade_id", $upgradeGrade)->first();
 
         $data = [
             'grade' => $gradeDesc,
