@@ -8,7 +8,6 @@
 namespace App\Services;
 
 use App\Models\InviteCode;
-use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use App\Models\Message;
 use App\Models\Order;

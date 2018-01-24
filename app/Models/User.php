@@ -48,11 +48,19 @@ class User extends Authenticatable
     }
 
     /**
-     * 获得与用户关联的信息.
+     * 获得与用户关联信息.
      */
     public function UserInfo()
     {
-        return $this->hasOne('App\Models\UserInfo', 'user_id', 'id')->select('id', 'user_id', 'upgrade', 'actual_name', 'wechat_id', 'taobao_id', 'alipay_id');
+        return $this->hasOne('App\Models\UserInfo', 'user_id', 'id')->select('id', 'user_id', 'actual_name', 'wechat_id', 'taobao_id', 'alipay_id');
+    }
+
+    /**
+     * 获得与用户等级信息.
+     */
+    public function UserGrade()
+    {
+        return $this->hasOne('App\Models\UserGrade', 'user_id', 'id')->select('id', 'user_id', 'user_grade', 'user_next_grade', 'invitecode_total', 'upgrade_invitecode_num');
     }
 
 }

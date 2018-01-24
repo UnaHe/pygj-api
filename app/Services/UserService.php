@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
 use App\Models\UserIncome;
+use App\Models\UserGrade;
 use Carbon\Carbon;
 
 class UserService{
@@ -34,9 +35,10 @@ class UserService{
 
         $UserLevelConfig = new UserLevelConfig();
 
-        $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
+        $userGrade = UserGrade::where("user_id", $userId)->first();
+
         // 账户等级.
-        $grade = $user['grade'] ? : 1;
+        $grade = $userGrade['user_grade'] ? : 1;
         $gradeConfig = $UserLevelConfig->where("grade_id", $grade)->first();
         if(!$gradeConfig){
             Log::error("用户等级{$grade}未配置");
@@ -47,10 +49,10 @@ class UserService{
         $gradePic = 'http://'.config('domains.pygj_domains').$gradeConfig['grade_pic'];
         $isTop = $gradeConfig['is_top'];
         // 升级需要数量.
-        $upgradeNeedNum = $user['user_info']['upgrade'] ? : 12;
+        $upgradeNeedNum = ($grade !== 3) ? ($userGrade['upgrade_invitecode_num'] ? : 10) : 0;
 
         // 升级等级.
-        $upgradeGrade = ($grade + 1) <= 3 ? $grade + 1 : 3;
+        $upgradeGrade = ($grade + 1) <= 3 ? ($grade + 1) : 3;
         $upgrade = $UserLevelConfig->where("grade_id", $upgradeGrade)->first();
 
         $data = [
@@ -168,12 +170,13 @@ class UserService{
     public function getUserInfo($userId){
         try{
             // 查询用户.
-            $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
-            $user['upgrade'] = $user['user_info']['upgrade'];
+            $user = User::where("id", $userId)->with('UserInfo')->with('UserGrade')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
+            $user['upgrade'] = $user['user_grade']['upgrade_invitecode_num'];
             $user['actual_name'] = $user['user_info']['actual_name'];
             $user['wechat_id'] = $user['user_info']['wechat_id'];
             $user['taobao_id'] = $user['user_info']['taobao_id'];
             $user['alipay_id'] = $user['user_info']['alipay_id'];
+            unset($user['user_grade']);
             unset($user['user_info']);
             if(!$user){
                 throw new \LogicException("用户不存在");
