@@ -17,6 +17,7 @@ use App\Models\FriendRemark;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
+use App\Models\OrderProcess;
 use App\Models\UserIncome;
 use App\Models\UserGrade;
 use Carbon\Carbon;
@@ -306,13 +307,13 @@ class UserService{
                 ['target_user_id', $userId],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
-            ])->select(['subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
+            ])->select(['id', 'subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
         }else if(!$startTime && !$endTime) {
             // 查询订单.
             $data = Order::where([
                 ['type', '<=', 2],
                 ['target_user_id', $userId]
-            ])->select(['subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
+            ])->select(['id', 'subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
         }else{
             $endTime = $startTime.' 23:59:59';
             $startTime = $startTime.' 00:00:00';
@@ -322,13 +323,18 @@ class UserService{
                 ['target_user_id', $userId],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
-            ])->select(['subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
+            ])->select(['id', 'subtype', 'number', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
         }
 
         // 分页.
         $data = (new QueryHelper())->pagination($data)->get();
 
+        $OrderProcess = new OrderProcess();
+
         foreach ($data as $k => $v) {
+            if($v['status'] === -1){
+                $data[$k]['remark'] = $OrderProcess->where('order_id', $v['id'])->orderBy('created_at', 'desc')->pluck('remark')->first();
+            }
             $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
             $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[99];
             $data[$k]['date'] = explode(' ', $v['created_at'])[0];

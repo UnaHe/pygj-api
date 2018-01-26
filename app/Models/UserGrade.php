@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * 用户等级表
- * Class UserInfo
+ * Class UserGrade
  * @package App\Models
  */
 class UserGrade extends Model
