@@ -440,6 +440,8 @@ class ComposerStaticInit696ebad3e741cd47c7e8a1506ce76fe2
         'App\\Models\\Order' => __DIR__ . '/../..' . '/app/Models/Order.php',
         'App\\Models\\SysConfig' => __DIR__ . '/../..' . '/app/Models/SysConfig.php',
         'App\\Models\\User' => __DIR__ . '/../..' . '/app/Models/User.php',
+        'App\\Models\\UserGrade' => __DIR__ . '/../..' . '/app/Models/UserGrade.php',
+        'App\\Models\\UserIncome' => __DIR__ . '/../..' . '/app/Models/UserIncome.php',
         'App\\Models\\UserInfo' => __DIR__ . '/../..' . '/app/Models/UserInfo.php',
         'App\\Models\\UserLevelConfig' => __DIR__ . '/../..' . '/app/Models/UserLevelConfig.php',
         'App\\Providers\\AppServiceProvider' => __DIR__ . '/../..' . '/app/Providers/AppServiceProvider.php',

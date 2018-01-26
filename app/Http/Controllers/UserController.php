@@ -257,18 +257,52 @@ class UserController extends Controller
      * @param Request $request
      * @return static
      */
-    public function extract(Request $request){
+    public function withdrawal(Request $request){
         $userId = $request->user()->id;
         $money = $request->input('money');
 
         // 提交申请.
         try{
-            (new UserService())->extract($userId, $money);
+            (new UserService())->withdrawal($userId, $money);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }
 
         return $this->ajaxSuccess();
+    }
+
+    /**
+     * 可提现金额
+     * @param Request $request
+     * @return static
+     */
+    public function withdrawalsNum(Request $request){
+        $userId = $request->user()->id;
+
+        try{
+            $data = (new UserService())->withdrawalsNum($userId);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
+    }
+
+    /**
+     * 提现记录
+     * @param Request $request
+     * @return static
+     */
+    public function withdrawalRecords(Request $request){
+        $userId = $request->user()->id;
+
+        try{
+            $data = (new UserService())->withdrawalRecords($userId);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
     }
 
 }

@@ -38,6 +38,8 @@ return array(
     'App\\Models\\Order' => $baseDir . '/app/Models/Order.php',
     'App\\Models\\SysConfig' => $baseDir . '/app/Models/SysConfig.php',
     'App\\Models\\User' => $baseDir . '/app/Models/User.php',
+    'App\\Models\\UserGrade' => $baseDir . '/app/Models/UserGrade.php',
+    'App\\Models\\UserIncome' => $baseDir . '/app/Models/UserIncome.php',
     'App\\Models\\UserInfo' => $baseDir . '/app/Models/UserInfo.php',
     'App\\Models\\UserLevelConfig' => $baseDir . '/app/Models/UserLevelConfig.php',
     'App\\Providers\\AppServiceProvider' => $baseDir . '/app/Providers/AppServiceProvider.php',

@@ -589,15 +589,23 @@ class UserService{
             // 本月收益.
             $startTime = $Carbon->startOfMonth()->toDateTimeString();
             $endTime = $Carbon->endOfMonth()->toDateTimeString();
+        }else{
+            if($startTime && $endTime){
+                $startTime = $startTime.' 00:00:00';
+                $endTime = $endTime.' 23:59:59';
+            }else{
+                $endTime = $startTime.' 23:59:59';
+                $startTime = $startTime.' 00:00:00';
+            }
         }
 
         // type为0,时间段收益.
-        $data = UserIncome::where([
+        $income = UserIncome::where([
             ['user_id', $userId],
             ['created_at', '>=', $startTime],
             ['created_at', '<=', $endTime]
         ])->select(['type', 'income_num', 'remark'])->orderBy('created_at', 'desc');
-        $data = $data->get()->toArray();
+        $data = (new QueryHelper())->pagination($income)->get()->toArray();
 
         $numbers = 0;
         foreach($data as $k => $v){
@@ -644,8 +652,15 @@ class UserService{
      * @return mixed
      * @throws \Exception
      */
-    public function extract($userId, $money){
+    public function withdrawal($userId, $money){
         try{
+            // 查询我的可提现金额.
+            $withdrawalsNum = $this->withdrawalsNum($userId);
+            $allowMoney = $withdrawalsNum - $money;
+            if($allowMoney < 0){
+                throw new \LogicException('最大可提现金额'.$withdrawalsNum.'元');
+            }
+
             // 我的用户信息.
             $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
 
@@ -682,6 +697,38 @@ class UserService{
             }
             throw new \Exception($error);
         }
+    }
+
+    /**
+     * 可提现金额
+     * @param $userId
+     * @return mixed
+     * @throws \Exception
+     */
+    public function withdrawalsNum($userId){
+        $incomeOrder = Order::where([
+            ['type', 4],
+            ['target_user_id', $userId],
+            ['status', 100]
+        ])->sum('number');
+
+        $income = UserIncome::where([['user_id', $userId]])->sum('income_num');
+
+        $withdrawalsNum = ($income - $incomeOrder) > 0 ? ($income - $incomeOrder) : 0;
+
+        return $withdrawalsNum;
+    }
+
+    /**
+     * 提现记录
+     * @param $userId
+     * @return mixed
+     * @throws \Exception
+     */
+    public function withdrawalRecords($userId){
+        $data = Order::where([['type', 4], ['target_user_id', $userId]]);
+        $withdrawalRecords = (new QueryHelper())->pagination($data)->get()->toArray();
+        return $withdrawalRecords;
     }
 
 }

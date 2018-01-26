@@ -123,7 +123,17 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 提现申请
          */
-        Route::post('/extract', "UserController@extract");
+        Route::post('/withdrawal', "UserController@withdrawal");
+
+        /**
+         * 可提现金额
+         */
+        Route::get('/withdrawalsNum', "UserController@withdrawalsNum");
+
+        /**
+         * 提现记录
+         */
+        Route::get('/withdrawalRecords', "UserController@withdrawalRecords");
 
         /**
          * 获取学员招募记录

@@ -9,7 +9,6 @@ namespace App\Services;
 
 use App\Models\InviteCode;
 use App\Models\User;
-use App\Models\Message;
 use App\Models\Order;
 use App\Models\CodePrice;
 
@@ -465,13 +464,13 @@ class InviteCodeService{
                 $isCode->update_time = date('Y-m-d H:i:s');
                 $isCode->save();
             } else {
-                throw new \LogicException('升级VIP失败');
+                throw new \LogicException('升级失败');
             }
         }catch (\Exception $e){
             if($e instanceof \LogicException){
                 $error = $e->getMessage();
             }else{
-                $error = '升级VIP失败';
+                $error = '升级失败';
             }
             throw new \Exception($error);
         }
