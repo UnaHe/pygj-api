@@ -532,7 +532,7 @@ class UserService{
             ['created_at', '<=', $endTime]
         ])->sum('number');
 
-        return $data;
+        return ['number' => $data];
     }
 
     /**
