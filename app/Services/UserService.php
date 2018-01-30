@@ -715,7 +715,7 @@ class UserService{
         $incomeOrder = Order::where([
             ['type', 4],
             ['target_user_id', $userId],
-            ['status', 100]
+            ['status','>' , -1]
         ])->sum('number');
 
         $income = UserIncome::where([['user_id', $userId]])->sum('income_num');

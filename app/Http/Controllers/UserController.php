@@ -56,8 +56,17 @@ class UserController extends Controller
         $alipay_id = $request->input('alipay_id');
 
         // 判断字段.
-        if(!$actual_name || !$wechat_id || !$taobao_id || !$alipay_id){
-            return $this->ajaxError("参数错误");
+        if(!preg_match('/^[\x{4e00}-\x{9fa5}]{2,10}$|^[a-zA-Z\s]*[a-zA-Z\s]{2,20}$/isu', $actual_name)){
+            return $this->ajaxError('姓名只支持中文或英文');
+        }
+        if(!preg_match('/^[-_a-zA-Z0-9]{5,19}+$/isu', $wechat_id)){
+            return $this->ajaxError('微信号格式不符合规范');
+        }
+        if(!$taobao_id){
+            return $this->ajaxError('请输入淘宝帐号');
+        }
+        if(!preg_match('/^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$|^1[3456789]{1}\d{9}$/', $alipay_id)){
+            return $this->ajaxError('支付宝帐号格式不符合规范');
         }
 
         // 执行更新数据.
