@@ -7,6 +7,7 @@
  */
 namespace App\Services;
 
+use App\Helpers\CacheHelper;
 use App\Models\InviteCode;
 use App\Models\User;
 use App\Models\Order;
@@ -17,12 +18,18 @@ class InviteCodeService{
      * 获取未使用的邀请码数量
      * @param $userId
      * @return mixed
+     * @throws \Exception
      */
     public function getUnUseInviteCodeNum($userId){
-        return InviteCode::where([
+        if($data = CacheHelper::getCache()){
+            return $data;
+        }
+        $data = InviteCode::where([
             'user_id' => $userId,
             'status' => InviteCode::STATUS_UNUSE
         ])->count();
+        CacheHelper::setCache($data, 1);
+        return $data;
     }
 
     /**

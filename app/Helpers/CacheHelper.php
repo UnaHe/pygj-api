@@ -14,6 +14,7 @@ class CacheHelper
      * 查询缓存
      * @param array $cacheKeyArgs
      * @return \Illuminate\Cache\CacheManager|mixed
+     * @throws \Exception
      */
     public static function getCache($cacheKeyArgs=[]){
         $caller = debug_backtrace()[1];
@@ -27,6 +28,7 @@ class CacheHelper
      * @param int $expireTime
      * @param array $cacheKeyArgs
      * @return \Illuminate\Cache\CacheManager|mixed
+     * @throws \Exception
      */
     public static function setCache($data, $expireTime=5, $cacheKeyArgs=[]){
         $caller = debug_backtrace()[1];

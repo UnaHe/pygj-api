@@ -64,7 +64,7 @@ class UserService{
             'is_top' => $isTop
         ];
 
-        CacheHelper::setCache($data, 2);
+        CacheHelper::setCache($data, 1);
         return $data;
     }
 
@@ -75,6 +75,10 @@ class UserService{
      * @throws \Exception
      */
     public function getMyMember($userId, $page=1){
+        if($users = CacheHelper::getCache()){
+            return $users;
+        }
+
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
@@ -116,6 +120,7 @@ class UserService{
             }
         }
 
+        CacheHelper::setCache($users, 1);
         return $users;
     }
 
@@ -236,6 +241,10 @@ class UserService{
      * @throws \Exception
      */
     public function querFriend($userId, $keyword){
+        if($users = CacheHelper::getCache()){
+            return $users;
+        }
+
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
@@ -287,6 +296,7 @@ class UserService{
             }
         }
 
+        CacheHelper::setCache($users, 1);
         return $users;
     }
 
@@ -296,8 +306,13 @@ class UserService{
      * @param $startTime
      * @param $endTime
      * @return mixed
+     * @throws \Exception
      */
     public function applyList($userId, $startTime='', $endTime=''){
+        if($result = CacheHelper::getCache()){
+            return $result;
+        }
+
         if($startTime && $endTime){
             $startTime = $startTime.' 00:00:00';
             $endTime = $endTime.' 23:59:59';
@@ -361,6 +376,7 @@ class UserService{
         $result['numbers'] = $numbers;
         $result['servertime'] = time();
 
+        CacheHelper::setCache($result, 1);
         return $result;
     }
 
@@ -370,8 +386,13 @@ class UserService{
      * @param $startTime
      * @param $endTime
      * @return mixed
+     * @throws \Exception
      */
     public function recruit($userId, $page=1, $startTime='', $endTime=''){
+        if($result = CacheHelper::getCache()){
+            return $result;
+        }
+
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
@@ -512,6 +533,7 @@ class UserService{
         $result['user_id'] = $userId;
         $result['servertime'] = time();
 
+        CacheHelper::setCache($result, 1);
         return $result;
     }
 
@@ -539,8 +561,13 @@ class UserService{
      * 今日收益
      * @param $userId
      * @return array
+     * @throws \Exception
      */
     public function income($userId){
+        if($data = CacheHelper::getCache()){
+            return $data;
+        }
+
         $UserIncome = new UserIncome();
         $Carbon = new Carbon();
 
@@ -573,6 +600,7 @@ class UserService{
             'total' => $total
         ];
 
+        CacheHelper::setCache($data, 1);
         return $data;
     }
 
@@ -583,8 +611,13 @@ class UserService{
      * @param $startTime
      * @param $endTime
      * @return array
+     * @throws \Exception
      */
     public function incomeList($userId, $type, $startTime, $endTime){
+        if($data = CacheHelper::getCache()){
+            return $data;
+        }
+
         $Carbon = new Carbon();
 
         if($type == 1){
@@ -620,6 +653,7 @@ class UserService{
 
         $data['numbers'] = $numbers;
 
+        CacheHelper::setCache($data, 1);
         return $data;
     }
 
