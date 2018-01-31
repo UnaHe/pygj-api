@@ -56,10 +56,10 @@ class UserController extends Controller
         $alipay_id = $request->input('alipay_id');
 
         // 判断字段.
-        if(!preg_match('/^[\x{4e00}-\x{9fa5}]{2,10}$|^[a-zA-Z\s]*[a-zA-Z\s]{2,20}$/isu', $actual_name)){
+        if(!preg_match('/^[\x{4e00}-\x{9fa5}]{2,20}$|^[a-zA-Z\s]*[a-zA-Z\s]{2,30}$/isu', $actual_name)){
             return $this->ajaxError('姓名只支持中文或英文');
         }
-        if(!preg_match('/^[-_a-zA-Z0-9]{5,19}+$/isu', $wechat_id)){
+        if(!preg_match('/^[-_a-zA-Z0-9]{5,19}+$|^1[3456789]{1}\d{9}$/isu', $wechat_id)){
             return $this->ajaxError('微信号格式不符合规范');
         }
         if(!$taobao_id){
