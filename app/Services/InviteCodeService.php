@@ -104,6 +104,7 @@ class InviteCodeService{
                 'unit_price' => $unit_price,
                 'total_price' => $total_price,
                 'status' => $status,
+                'date' => date('Y-m-d').' 00:00:00',
             ]);
 
             if(!$res){
@@ -273,6 +274,7 @@ class InviteCodeService{
                 'total_price' => $total_price,
                 'status' => $status,
                 'remark' => $memberCode,
+                'date' => date('Y-m-d').' 00:00:00',
             ]);
 
             if(!$res){
@@ -463,6 +465,7 @@ class InviteCodeService{
                 'total_price' => $unit_price,
                 'status' => $status,
                 'remark' => $remark,
+                'date' => date('Y-m-d').' 00:00:00',
             ]);
 
             if($res){

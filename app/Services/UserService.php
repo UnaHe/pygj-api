@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\UserInfo;
 use App\Models\UserLevelConfig;
 use App\Models\FriendRemark;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use App\Models\Order;
@@ -407,12 +408,12 @@ class UserService{
                 ['type', '<=', 2],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
-            ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
+            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
         }else if(!$startTime && !$endTime) {
             // 学员招募.
             $member = $Order->whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2]
-            ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
+            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
         }else{
             // 初始化时间.
             $endTime = $startTime.' 23:59:59';
@@ -422,14 +423,14 @@ class UserService{
                 ['type', '<=', 2],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
-            ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
+            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
         }
         // 分页.
         $member = (new QueryHelper())->pagination($member)->get()->toArray();
 
         foreach ($member as $k => $v) {
             $member[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
-            $member[$k]['date'] = explode(' ', $v['created_at'])[0];
+            $member[$k]['date'] = explode(' ', $v['date'])[0];
         }
 
         // 我的招募.
@@ -451,13 +452,13 @@ class UserService{
                     ['target_user_id', $userId],
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
-                ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
+                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
             }else if(!$startTime && !$endTime) {
                 // 我的招募.
                 $data = $Order->where([
                     ['type', '<=', 2],
                     ['target_user_id', $userId]
-                ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
+                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
             }else{
                 // 初始化时间.
                 $endTime = $startTime.' 23:59:59';
@@ -468,14 +469,14 @@ class UserService{
                     ['target_user_id', $userId],
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
-                ])->select(['type', 'subtype', 'number', 'target_user_id', 'created_at'])->orderBy('created_at', 'desc');
+                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
             }
             // 分页.
             $data = (new QueryHelper())->pagination($data)->get()->toArray();
 
             foreach ($data as $k => $v) {
                 $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
-                $data[$k]['date'] = explode(' ', $v['created_at'])[0];
+                $data[$k]['date'] = explode(' ', $v['date'])[0];
             }
 
             foreach ($data as $k => $v){
@@ -701,6 +702,7 @@ class UserService{
                 'user_grade' => $user_grade,
                 'status' => $status,
                 'remark' => $remark,
+                'date' => date('Y-m-d').' 00:00:00',
             ]);
 
             if(!$res){
