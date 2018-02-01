@@ -430,7 +430,6 @@ class UserService{
 
         foreach ($member as $k => $v) {
             $member[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
-            $member[$k]['date'] = explode(' ', $v['date'])[0];
         }
 
         // 我的招募.
@@ -476,7 +475,6 @@ class UserService{
 
             foreach ($data as $k => $v) {
                 $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
-                $data[$k]['date'] = explode(' ', $v['date'])[0];
             }
 
             foreach ($data as $k => $v){
@@ -702,7 +700,7 @@ class UserService{
                 'user_grade' => $user_grade,
                 'status' => $status,
                 'remark' => $remark,
-                'date' => date('Y-m-d').' 00:00:00',
+                'date' => date('Y-m-d'),
             ]);
 
             if(!$res){
