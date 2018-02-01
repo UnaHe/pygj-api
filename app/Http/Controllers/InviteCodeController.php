@@ -11,10 +11,13 @@ class InviteCodeController extends Controller
      * 获取未使用邀请码数量
      * @param Request $request
      * @return static
+     * @throws \Exception
      */
     public function getUnUseInviteCodeNum(Request $request){
         $userId = $request->user()->id;
+
         $data = (new InviteCodeService())->getUnUseInviteCodeNum($userId);
+
         return $this->ajaxSuccess($data);
     }
 

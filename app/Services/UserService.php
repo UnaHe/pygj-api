@@ -37,9 +37,10 @@ class UserService{
         $UserLevelConfig = new UserLevelConfig();
 
         $userGrade = UserGrade::where("user_id", $userId)->first();
+        $user = User::where("id", $userId)->with('UserInfo')->with('UserGrade')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
 
         // 账户等级.
-        $grade = $userGrade['user_grade'] ? : 1;
+        $grade = $user['grade'] ? : 1;
         $gradeConfig = $UserLevelConfig->where("grade_id", $grade)->first();
         if(!$gradeConfig){
             Log::error("用户等级{$grade}未配置");
@@ -75,10 +76,6 @@ class UserService{
      * @throws \Exception
      */
     public function getMyMember($userId, $page=1){
-        if($users = CacheHelper::getCache()){
-            return $users;
-        }
-
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
@@ -120,7 +117,6 @@ class UserService{
             }
         }
 
-        CacheHelper::setCache($users, 1);
         return $users;
     }
 
@@ -177,6 +173,9 @@ class UserService{
         try{
             // 查询用户.
             $user = User::where("id", $userId)->with('UserInfo')->with('UserGrade')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
+            if(!$user){
+                throw new \LogicException("用户不存在");
+            }
             $user['upgrade'] = $user['user_grade']['upgrade_invitecode_num'];
             $user['actual_name'] = $user['user_info']['actual_name'];
             $user['wechat_id'] = $user['user_info']['wechat_id'];
@@ -184,9 +183,7 @@ class UserService{
             $user['alipay_id'] = $user['user_info']['alipay_id'];
             unset($user['user_grade']);
             unset($user['user_info']);
-            if(!$user){
-                throw new \LogicException("用户不存在");
-            }
+
             // 是否过期.
             if ($user['expiry_time'] && (strtotime($user['expiry_time']) - time()) < 0) {
                 $user['is_expiry'] = 1;
@@ -241,10 +238,6 @@ class UserService{
      * @throws \Exception
      */
     public function querFriend($userId, $keyword){
-        if($users = CacheHelper::getCache()){
-            return $users;
-        }
-
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
@@ -296,7 +289,6 @@ class UserService{
             }
         }
 
-        CacheHelper::setCache($users, 1);
         return $users;
     }
 
@@ -309,10 +301,6 @@ class UserService{
      * @throws \Exception
      */
     public function applyList($userId, $startTime='', $endTime=''){
-        if($result = CacheHelper::getCache()){
-            return $result;
-        }
-
         if($startTime && $endTime){
             $startTime = $startTime.' 00:00:00';
             $endTime = $endTime.' 23:59:59';
@@ -376,7 +364,6 @@ class UserService{
         $result['numbers'] = $numbers;
         $result['servertime'] = time();
 
-        CacheHelper::setCache($result, 1);
         return $result;
     }
 
@@ -389,10 +376,6 @@ class UserService{
      * @throws \Exception
      */
     public function recruit($userId, $page=1, $startTime='', $endTime=''){
-        if($result = CacheHelper::getCache()){
-            return $result;
-        }
-
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
@@ -533,7 +516,6 @@ class UserService{
         $result['user_id'] = $userId;
         $result['servertime'] = time();
 
-        CacheHelper::setCache($result, 1);
         return $result;
     }
 
@@ -614,10 +596,6 @@ class UserService{
      * @throws \Exception
      */
     public function incomeList($userId, $type, $startTime, $endTime){
-        if($data = CacheHelper::getCache()){
-            return $data;
-        }
-
         $Carbon = new Carbon();
 
         if($type == 1){
@@ -653,7 +631,6 @@ class UserService{
 
         $data['numbers'] = $numbers;
 
-        CacheHelper::setCache($data, 1);
         return $data;
     }
 

@@ -26,7 +26,7 @@ class FriendRemarkService{
             } else {
                 $res = $data->update(['remark' => $remark]);
             }
-            Cache::forget('App\Services\UserService::getMyMember:8a9f8f9fe782b7cf71641ad84976113a');
+//            Cache::forget('App\Services\UserService::getMyMember:8a9f8f9fe782b7cf71641ad84976113a');
             if(!$res){
                 throw new \LogicException('设置备注失败');
             }

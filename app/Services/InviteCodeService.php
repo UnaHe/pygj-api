@@ -24,11 +24,13 @@ class InviteCodeService{
         if($data = CacheHelper::getCache()){
             return $data;
         }
+
         $data = InviteCode::where([
             'user_id' => $userId,
             'status' => InviteCode::STATUS_UNUSE
         ])->count();
         CacheHelper::setCache($data, 1);
+
         return $data;
     }
 
