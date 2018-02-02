@@ -408,12 +408,12 @@ class UserService{
                 ['type', '<=', 2],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
-            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
+            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
         }else if(!$startTime && !$endTime) {
             // 学员招募.
             $member = $Order->whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2]
-            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
+            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
         }else{
             // 初始化时间.
             $endTime = $startTime.' 23:59:59';
@@ -423,7 +423,7 @@ class UserService{
                 ['type', '<=', 2],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
-            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
+            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
         }
         // 分页.
         $member = (new QueryHelper())->pagination($member)->get()->toArray();
@@ -451,13 +451,13 @@ class UserService{
                     ['target_user_id', $userId],
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
-                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
+                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
             }else if(!$startTime && !$endTime) {
                 // 我的招募.
                 $data = $Order->where([
                     ['type', '<=', 2],
                     ['target_user_id', $userId]
-                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
+                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
             }else{
                 // 初始化时间.
                 $endTime = $startTime.' 23:59:59';
@@ -468,7 +468,7 @@ class UserService{
                     ['target_user_id', $userId],
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
-                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('created_at', 'desc');
+                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
             }
             // 分页.
             $data = (new QueryHelper())->pagination($data)->get()->toArray();
@@ -478,7 +478,7 @@ class UserService{
             }
 
             foreach ($data as $k => $v){
-                $member[] = $v;
+                array_unshift($member, $v);
             };
         }
 
