@@ -74,7 +74,6 @@ class InviteCodeController extends Controller
      * 转让邀请码
      * @param Request $request
      * @return static
-     * @throws \Exception
      */
     public function transfer(Request $request){
         $userId = $request->user()->id;
@@ -99,13 +98,13 @@ class InviteCodeController extends Controller
             return $this->ajaxError('请输入正确的手机号码');
         }
 
-//        try{
-//            (new InviteCodeService())->transfer($userId, $code, $types, $toName, $toPhone);
-//        }catch (\Exception $e){
-//            return $this->ajaxError($e->getMessage());
-//        }
-        $data = (new InviteCodeService())->transfer($userId, $code, $types, $toName, $toPhone);
-        return $this->ajaxSuccess($data);
+        try{
+            (new InviteCodeService())->transfer($userId, $code, $types, $toName, $toPhone);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess();
     }
 
     /**
