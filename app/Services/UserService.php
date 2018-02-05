@@ -103,7 +103,7 @@ class UserService{
             $inviteCode = $User->where("id", $userId)->pluck('invite_code')->first();
             if($inviteCode){
                 //师傅的用户id
-                $masterUserId = $InviteCode->where(['invite_code' => $inviteCode])->pluck('user_id')->first();
+                $masterUserId = $InviteCode->where('invite_code', $inviteCode)->pluck('user_id')->first();
                 if($masterUserId){
                     $masterUser = $User->from($User->getTable()." as user")->where('user.id', $masterUserId)
                         ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")
@@ -136,7 +136,6 @@ class UserService{
 
             if($data !== NULL){
                 $res = $data->update([
-                    'user_id' => $userId,
                     'actual_name' => $actual_name,
                     'wechat_id' => $wechat_id,
                     'taobao_id' => $taobao_id,
@@ -155,11 +154,7 @@ class UserService{
                 throw new \LogicException('信息存储失败');
             }
         }catch (\Exception $e){
-            if($e instanceof \LogicException){
-                $error = $e->getMessage();
-            }else{
-                $error = '信息存储失败';
-            }
+            $error = $e instanceof \LogicException ? $e->getMessage() : '信息存储失败';
             throw new \Exception($error);
         }
     }
@@ -193,11 +188,7 @@ class UserService{
             }
             return $user;
         }catch (\Exception $e){
-            if($e instanceof \LogicException){
-                $error = $e->getMessage();
-            }else{
-                $error = '用户不存在';
-            }
+            $error = $e instanceof \LogicException ? $e->getMessage() : '用户不存在';
             throw new \Exception($error);
         }
     }
@@ -222,11 +213,7 @@ class UserService{
                 throw new \LogicException("密码不正确!");
             }
         }catch (\Exception $e){
-            if($e instanceof \LogicException){
-                $error = $e->getMessage();
-            }else{
-                $error = '密码验证失败';
-            }
+            $error = $e instanceof \LogicException ? $e->getMessage() : '密码验证失败';
             throw new \Exception($error);
         }
     }
@@ -271,7 +258,7 @@ class UserService{
         $inviteCode = $User->where("id", $userId)->pluck('invite_code')->first();
         if($inviteCode){
             //师傅的用户id
-            $masterUserId = $InviteCode->where(['invite_code' => $inviteCode])->pluck('user_id')->first();
+            $masterUserId = $InviteCode->where('invite_code', $inviteCode)->pluck('user_id')->first();
             if($masterUserId){
                 // 匹配师傅关键字.
                 $masterUser = $User->from($User->getTable()." as user")->where("user.id", $masterUserId)
@@ -435,7 +422,7 @@ class UserService{
         // 我的招募.
         if ($page == 1) {
             // 我的用户信息.
-            $me = $User->where('id', $userId)->with('UserInfo')->first()->toArray();
+            $me = $User->where('id', $userId)->with('UserInfo')->first(['id', 'phone'])->toArray();
             $meInfo['id'] = $me['id'];
             $meInfo['phone'] = $me['phone'];
             $meInfo['wechat_id'] = $me['user_info']['wechat_id'];
@@ -573,7 +560,7 @@ class UserService{
         ])->sum('income_num');
 
         // 总计收益.
-        $total = $UserIncome->where([['user_id', $userId]])->sum('income_num');
+        $total = $UserIncome->where('user_id', $userId)->sum('income_num');
 
         $data = [
             'day' => $day,
@@ -620,11 +607,13 @@ class UserService{
             ['user_id', $userId],
             ['created_at', '>=', $startTime],
             ['created_at', '<=', $endTime]
-        ])->select(['type', 'income_num', 'remark'])->orderBy('created_at', 'desc');
+        ])->select(['type', 'income_num', 'remark', 'created_at'])->orderBy('created_at', 'desc');
         $data = (new QueryHelper())->pagination($income)->get()->toArray();
 
         $numbers = 0;
         foreach($data as $k => $v){
+            $data[$k]['date'] = explode(' ', $v['created_at'])[0];
+            $data[$k]['time'] = explode(' ', $v['created_at'])[1];
             $numbers +=$v['income_num'];
         }
 
@@ -652,11 +641,7 @@ class UserService{
             $res->remark = $remark;
             return $res->save();
         }catch (\Exception $e){
-            if($e instanceof \LogicException){
-                $error = $e->getMessage();
-            }else{
-                $error = '备注失败';
-            }
+            $error = $e instanceof \LogicException ? $e->getMessage() : '备注失败';
             throw new \Exception($error);
         }
     }
@@ -678,7 +663,7 @@ class UserService{
             }
 
             // 我的用户信息.
-            $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
+            $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'grade'])->toArray();
 
             $type = Order::ORDER_EXTRACT;
             $subtype = 41;
@@ -707,11 +692,7 @@ class UserService{
                 throw new \LogicException('提现申请失败');
             }
         }catch (\Exception $e){
-            if($e instanceof \LogicException){
-                $error = $e->getMessage();
-            }else{
-                $error = '提现申请失败';
-            }
+            $error = $e instanceof \LogicException ? $e->getMessage() : '提现申请失败';
             throw new \Exception($error);
         }
     }
@@ -724,12 +705,12 @@ class UserService{
      */
     public function withdrawalsNum($userId){
         $incomeOrder = Order::where([
-            ['type', 4],
-            ['target_user_id', $userId],
-            ['status','>' , -1]
+            'type' => 4,
+            'target_user_id' => $userId,
+            ['status', '>', -1]
         ])->sum('number');
 
-        $income = UserIncome::where([['user_id', $userId]])->sum('income_num');
+        $income = UserIncome::where('user_id', $userId)->sum('income_num');
 
         $withdrawalsNum = ($income - $incomeOrder) > 0 ? ($income - $incomeOrder) : 0;
 
@@ -743,7 +724,7 @@ class UserService{
      * @throws \Exception
      */
     public function withdrawalRecords($userId){
-        $data = Order::where([['type', 4], ['target_user_id', $userId]]);
+        $data = Order::where(['type' => 4, 'target_user_id' => $userId]);
         $withdrawalRecords = (new QueryHelper())->pagination($data)->get()->toArray();
         return $withdrawalRecords;
     }

@@ -71,6 +71,11 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::post('/invideCode/sendInviteList', "InviteCodeController@sendInviteList");
 
         /**
+         * 转让邀请码
+         */
+        Route::post('/invideCode/transfer', "InviteCodeController@transfer");
+
+        /**
          * 续费
          */
         Route::post('/invideCode/renewFee', "InviteCodeController@renewFee");

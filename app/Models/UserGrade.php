@@ -13,5 +13,4 @@ class UserGrade extends Model
 {
     protected $table = "xmt_user_grade";
     protected $guarded = ['id'];
-    public $timestamps = false;
 }

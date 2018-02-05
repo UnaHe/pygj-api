@@ -15,6 +15,8 @@ class CaptchaService
     /**
      * 发送注册验证码
      * @param $mobile
+     * @return bool|string
+     * @throws \Exception
      */
     public function registerSms($mobile){
         return $this->sendCodeSms($mobile, 'SMS_105510071');
@@ -24,6 +26,7 @@ class CaptchaService
      * 修改密码验证码
      * @param $mobile
      * @return bool|string
+     * @throws \Exception
      */
     public function modifyPasswordSms($mobile){
         return $this->sendCodeSms($mobile, 'SMS_105895041');
@@ -34,6 +37,7 @@ class CaptchaService
      * @param $mobile
      * @param $templateCode
      * @return bool|string
+     * @throws \Exception
      */
     public function sendCodeSms($mobile, $templateCode){
         $code = mt_rand(1000, 9999);

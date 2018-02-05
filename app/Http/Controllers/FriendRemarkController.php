@@ -18,7 +18,7 @@ class FriendRemarkController extends Controller
         $friend_user_id = $request->input('friend_user_id');
         $remark = $request->input('remark');
 
-        if(!$remark){
+        if(!preg_match('/^[\w\x{4e00}-\x{9fa5}]{1,10}$/u', $remark)){
             return $this->ajaxError("参数错误");
         }
 

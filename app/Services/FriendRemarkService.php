@@ -31,11 +31,7 @@ class FriendRemarkService{
                 throw new \LogicException('设置备注失败');
             }
         }catch (\Exception $e){
-            if($e instanceof \LogicException){
-                $error = $e->getMessage();
-            }else{
-                $error = '设置备注失败';
-            }
+            $error = $e instanceof \LogicException ? $e->getMessage() : '设置备注失败';
             throw new \Exception($error);
         }
     }

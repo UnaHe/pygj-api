@@ -34,6 +34,16 @@ class Order extends Model
      */
     const ORDER_EXTRACT = 4;
 
+    /**
+     * 5:转码订单
+     */
+    const ORDER_TRANSFER = 5;
+
+    /**
+     * Redis Key
+     */
+    const REDIS_QUEUE= "manager:queue:complate_order_info";
+
     // 订单子类别.
     static $order_subtype = [
         11 => '月付',

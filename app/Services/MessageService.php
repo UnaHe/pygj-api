@@ -36,11 +36,7 @@ class MessageService{
                 throw new \LogicException('创建消息失败');
             }
         }catch (\Exception $e){
-            if($e instanceof \LogicException){
-                $error = $e->getMessage();
-            }else{
-                $error = '创建消息失败';
-            }
+            $error = $e instanceof \LogicException ? $e->getMessage() : '创建消息失败';
             throw new \Exception($error);
         }
     }

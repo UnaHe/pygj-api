@@ -12,6 +12,8 @@ use App\Models\InviteCode;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\CodePrice;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 
 class InviteCodeService{
     /**
@@ -40,9 +42,7 @@ class InviteCodeService{
      * @return mixed
      */
     public function getListByUserId($userId){
-        $inviteCodes =  InviteCode::where([
-            'user_id' => $userId
-        ])->select(["invite_code", "status"])->orderBy("status","asc")->get();
+        $inviteCodes =  InviteCode::where('user_id', $userId)->select(["invite_code", "status"])->orderBy("status","asc")->get();
 
         foreach ($inviteCodes as &$inviteCode){
             if($inviteCode['status'] == InviteCode::STATUS_UNUSE){
@@ -62,7 +62,7 @@ class InviteCodeService{
     public function appInviteCode($userId, $types, $num){
         try{
             // 我的用户信息.
-            $user = User::where("id", $userId)->with('UserInfo')->first()->toArray();
+            $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'grade'])->toArray();
 
             // 生成订单字段.
             switch ($types){
@@ -87,7 +87,7 @@ class InviteCodeService{
             $user_phone  = $user['phone'];
             $user_name = $user['user_info']['actual_name'];
             $user_grade = $user['grade'] ? : 1;
-            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+            $unit_price = CodePrice::where('duration', $types)->pluck('code_price')->first();
             $total_price = $unit_price * $num;
             $status = 1;
 
@@ -111,11 +111,7 @@ class InviteCodeService{
                 throw new \LogicException('申请邀请码失败');
             }
         }catch (\Exception $e){
-            if($e instanceof \LogicException){
-                $error = $e->getMessage();
-            }else{
-                $error = '申请邀请码失败';
-            }
+            $error = $e instanceof \LogicException ? $e->getMessage() : '申请邀请码失败';
             throw new \Exception($error);
         }
     }
@@ -158,6 +154,98 @@ class InviteCodeService{
     }
 
     /**
+     * 转让邀请码
+     * @param $userId
+     * @param $code
+     * @param $types
+     * @param $toName
+     * @param $toPhone
+     * @return mixed
+     * @throws \Exception
+     */
+    public function transfer($userId, $code, $types, $toName, $toPhone){
+        try{
+            $InviteCode = new InviteCode();
+            // 码信息.
+            $codes = ['PncENH','3Ju8bb','8WIAIr','132564','RXwkYx', 'FrwqIr'];
+
+            $codeInfo = $InviteCode->whereIn('invite_code', $codes)->where([
+                'user_id'=> $userId,
+                'status' => InviteCode::STATUS_UNUSE
+            ])->select('invite_code')->get();
+            $codeInfoArray = $codeInfo->toArray();
+            $codeArray = [];
+            $codeRemark = '';
+            $num = 0;
+            foreach ($codeInfoArray as $k=>$v) {
+                $codeArray[] = $v['invite_code'];
+                $codeRemark .= $v['invite_code'].',';
+                $num++;
+            }
+
+            // 用户信息.
+            $toUser = User::where('phone', $toPhone)->with('UserInfo')->first(['id','path', 'grade']);
+
+            if(!$toUser){
+                throw new \LogicException('转让用户不存在');
+            }
+            $toUserArray = $toUser->toArray();
+            $toUserPath = explode(':', $toUserArray['path']);
+            $toUserName = $toUserArray['user_info']['actual_name'];
+
+            if(!in_array($userId, $toUserPath)){
+                throw new \LogicException('转让用户不是您的学员');
+            }
+
+            if(empty($toUserName) || $toUserName != $toName){
+                throw new \LogicException('真实姓名不正确或对方未使用管家');
+            }
+
+            // 构建订单字段.
+            $type = Order::ORDER_TRANSFER;
+            $subtype = 51;
+            $user_id  = $toUserArray['id'];
+            $user_phone  = $toPhone;
+            $user_name = $toUserName;
+            $user_grade = $toUserArray['grade'] ? : 1;
+            $unit_price = CodePrice::where('duration', $types)->pluck('code_price')->first();
+            $total_price = $unit_price * $num;
+            $status = 100;
+
+            // 创建申请订单.
+            DB::beginTransaction();
+            $res = Order::create([
+                'type' => $type,
+                'subtype' => $subtype,
+                'number' => $num,
+                'target_user_id' => $userId,
+                'user_id' => $user_id,
+                'user_phone' => $user_phone,
+                'user_name' => $user_name,
+                'user_grade' => $user_grade,
+                'unit_price' => $unit_price,
+                'total_price' => $total_price,
+                'status' => $status,
+                'remark' => rtrim($codeRemark, ','),
+                'date' => date('Y-m-d'),
+            ]);
+
+            if($res){
+                $InviteCode->whereIn('invite_code', $codeArray)->select('id')->update(['user_id' => $user_id]);
+                Redis::lpush(Order::REDIS_QUEUE, $res);
+            } else {
+                DB::rollBack();
+                throw new \LogicException('转让邀请码失败');
+            }
+            DB::commit();
+        }catch (\Exception $e){
+            DB::rollBack();
+            $error = $e instanceof \LogicException ? $e->getMessage() : '转让邀请码失败';
+            throw new \Exception($error);
+        }
+    }
+
+    /**
      * 续费
      * @param $userId
      * @param $phone
@@ -170,11 +258,12 @@ class InviteCodeService{
             $InviteCode = new InviteCode();
 
             // 用户信息.
-            $member = $User->where('phone', $phone)->with('UserInfo')->first()->toArray();
+            $member = $User->where('phone', $phone)->with('UserInfo')->first(['id', 'phone', 'invite_code', 'grade']);
 
             if(!$member){
                 throw new \LogicException('用户不存在');
             }
+            $member = $member->toArray();
             $member_id = $member['id'];
             $memberCode = $member['invite_code'];
 
@@ -200,7 +289,7 @@ class InviteCodeService{
             }
 
             // 当前邀请码级别.
-            $memberType = $InviteCode->where(['invite_code' => $memberCode])->pluck('effective_days')->first();
+            $memberType = $InviteCode->where('invite_code', $memberCode)->pluck('effective_days')->first();
 
             // 生成订单字段.
             switch ($memberType){
@@ -256,7 +345,7 @@ class InviteCodeService{
             $member_phone  = $member['phone'];
             $member_name = $member['user_info']['actual_name'];
             $member_grade = $member['grade'] ? : 1;
-            $unit_price = CodePrice::where(['duration' => $types])->pluck('code_price')->first();
+            $unit_price = CodePrice::where('duration', $types)->pluck('code_price')->first();
             $total_price = $unit_price * $num;
             $status = 1;
 
@@ -281,11 +370,7 @@ class InviteCodeService{
                 throw new \LogicException('续费失败');
             }
         }catch (\Exception $e){
-            if($e instanceof \LogicException){
-                $error = $e->getMessage();
-            }else{
-                $error = '续费失败';
-            }
+            $error = $e instanceof \LogicException ? $e->getMessage() : '续费失败';
             throw new \Exception($error);
         }
     }
@@ -301,7 +386,7 @@ class InviteCodeService{
             $InviteCode = new InviteCode();
 
             // 我的用户信息.
-            $user = User::where("id", $userId)->with('UserInfo')->first();
+            $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'invite_code', 'grade']);
             $userArr = $user->toArray();
             $userOldCode = $userArr['invite_code'];
 
@@ -448,10 +533,11 @@ class InviteCodeService{
             $user_phone  = $userArr['phone'];
             $user_name = $userArr['user_info']['actual_name'];
             $user_grade = $userArr['grade'] ? : 1;
-            $unit_price = CodePrice::where(['duration' => $newCodeType])->pluck('code_price')->first();
+            $unit_price = CodePrice::where('duration', $newCodeType)->pluck('code_price')->first();
             $status = 100;
 
             // 创建升级订单.
+            DB::beginTransaction();
             $res = Order::create([
                 'type' => $type,
                 'subtype' => $subtype,
@@ -476,14 +562,13 @@ class InviteCodeService{
                 $isCode->update_time = date('Y-m-d H:i:s');
                 $isCode->save();
             } else {
+                DB::rollBack();
                 throw new \LogicException('升级失败');
             }
+            DB::commit();
         }catch (\Exception $e){
-            if($e instanceof \LogicException){
-                $error = $e->getMessage();
-            }else{
-                $error = '升级失败';
-            }
+            DB::rollBack();
+            $error = $e instanceof \LogicException ? $e->getMessage() : '升级失败';
             throw new \Exception($error);
         }
     }
