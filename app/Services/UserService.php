@@ -71,7 +71,7 @@ class UserService{
     }
 
     /**
-     * 获取我的学员列表
+     * 获取我的推客列表
      * @param $userId
      * @return array
      * @throws \Exception
@@ -89,12 +89,12 @@ class UserService{
         $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
         $query->select(["user.id", "user.phone", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"]);
 
-        //我的学员
+        //我的推客
         $users = (new QueryHelper())->pagination($query)->get()->toArray();
         $remarks = new FriendRemark();
         foreach ($users as &$user){
             $user['type'] = 1;
-            $user['type_desc'] = "学员";
+            $user['type_desc'] = "推客";
             $user['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $user['id']])->pluck('remark')->first();
         }
 
@@ -127,10 +127,11 @@ class UserService{
      * @param $actual_name
      * @param $wechat_id
      * @param $taobao_id
+     * @param $idCard
      * @param $alipay_id
      * @throws \Exception
      */
-    public function setUserInfo($userId, $actual_name, $wechat_id ,$taobao_id ,$alipay_id){
+    public function setUserInfo($userId, $actual_name, $wechat_id, $taobao_id, $idCard, $alipay_id){
         try{
             $data = UserInfo::where('user_id', $userId)->first();
 
@@ -139,6 +140,7 @@ class UserService{
                     'actual_name' => $actual_name,
                     'wechat_id' => $wechat_id,
                     'taobao_id' => $taobao_id,
+                    'id_card' => $idCard,
                     'alipay_id' => $alipay_id,
                 ]);
             } else {
@@ -147,6 +149,7 @@ class UserService{
                     'actual_name' => $actual_name,
                     'wechat_id' => $wechat_id,
                     'taobao_id' => $taobao_id,
+                    'id_card' => $idCard,
                     'alipay_id' => $alipay_id,
                 ]);
             }
@@ -230,7 +233,7 @@ class UserService{
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
 
-        // 查找我的学员.
+        // 查找我的推客.
         $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
             'invite.user_id' => $userId,
             'invite.status' => InviteCode::STATUS_USED
@@ -245,12 +248,12 @@ class UserService{
                 ->orwhere('userinfo.wechat_id', 'like', "%$keyword%");
         });
 
-        // 符合条件的学员.
+        // 符合条件的推客.
         $users = $query->get()->toArray();
         $remarks = new FriendRemark();
         foreach ($users as &$user){
             $user['type'] = 1;
-            $user['type_desc'] = "学员";
+            $user['type_desc'] = "推客";
             $user['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $user['id']])->pluck('remark')->first();
         }
 
@@ -281,7 +284,7 @@ class UserService{
     }
 
     /**
-     * 获取学员位申请记录
+     * 获取推客位申请记录
      * @param $userId
      * @param $startTime
      * @param $endTime
@@ -356,7 +359,7 @@ class UserService{
     }
 
     /**
-     * 获取学员招募记录
+     * 获取推客招募记录
      * @param $userId
      * @param $startTime
      * @param $endTime
@@ -377,10 +380,10 @@ class UserService{
         $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
         $query->select(["user.id", "user.phone", "userinfo.wechat_id"]);
 
-        // 我的学员.
+        // 我的推客.
         $users = $query->get()->toArray();
 
-        // 我的学员ID.
+        // 我的推客ID.
         $usersId = [];
         foreach($users as $k=>$v){
             $usersId[] = $v['id'];
@@ -390,7 +393,7 @@ class UserService{
             // 初始化时间.
             $startTime = $startTime.' 00:00:00';
             $endTime = $endTime.' 23:59:59';
-            // 时间段学员招募.
+            // 时间段推客招募.
             $member = $Order->whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2],
                 ['status', 100],
@@ -398,7 +401,7 @@ class UserService{
                 ['created_at', '<=', $endTime]
             ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
         }else if(!$startTime && !$endTime) {
-            // 学员招募.
+            // 推客招募.
             $member = $Order->whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2],
                 ['status', 100],
@@ -407,7 +410,7 @@ class UserService{
             // 初始化时间.
             $endTime = $startTime.' 23:59:59';
             $startTime = $startTime.' 00:00:00';
-            // 单天学员招募.
+            // 单天推客招募.
             $member = $Order->whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2],
                 ['status', 100],

@@ -31,7 +31,7 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::get('/invideCode/getList', "InviteCodeController@getList");
 
         /**
-         * 获取我的学员列表
+         * 获取我的推客列表
          */
         Route::get('/member/getMyMember', "UserController@getMyMember");
 
@@ -141,7 +141,7 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::get('/withdrawalRecords', "UserController@withdrawalRecords");
 
         /**
-         * 获取学员招募记录
+         * 获取推客招募记录
          */
         Route::get('/member/recruit', "UserController@recruit");
 
@@ -151,7 +151,7 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::get('/member/nowAdded', "UserController@nowAdded");
 
         /**
-         * 获取学员位申请记录
+         * 获取推客位申请记录
          */
         Route::get('/member/applyList', "UserController@applyList");
 

@@ -15,7 +15,7 @@ class Order extends Model
     protected $guarded = ['id'];
 
     /**
-     * 1:学员位申请订单
+     * 1:推客位申请订单
      */
     const ORDER_APPLY = 1;
 

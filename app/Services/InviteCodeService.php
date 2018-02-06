@@ -197,7 +197,7 @@ class InviteCodeService{
             $toUserName = $toUserArray['user_info']['actual_name'];
 
             if(!in_array($userId, $toUserPath)){
-                throw new \LogicException('转让用户不是您的学员');
+                throw new \LogicException('转让用户不是您的推客');
             }
 
             if(empty($toUserName) || $toUserName != $toName){
@@ -298,7 +298,7 @@ class InviteCodeService{
                 $query->leftjoin($User->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
                 $query->select("user.id");
 
-                //我的学员
+                //我的推客
                 $members = $query->get()->toArray();
                 foreach($members as $k=>$v){
                     foreach($v as $key=>$val){
@@ -306,7 +306,7 @@ class InviteCodeService{
                     }
                 }
                 if(!in_array($member_id, $new_arr)){
-                    throw new \LogicException('申请用户不是您的学员');
+                    throw new \LogicException('申请用户不是您的推客');
                 }
             }
 

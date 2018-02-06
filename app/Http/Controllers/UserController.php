@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\UserService;
 use Illuminate\Http\Request;
+use App\Helpers\IDCardHelper;
 
 class UserController extends Controller
 {
@@ -23,7 +24,7 @@ class UserController extends Controller
     }
 
     /**
-     * 获取我的学员列表
+     * 获取我的推客列表
      * @param Request $request
      * @return static
      */
@@ -52,6 +53,7 @@ class UserController extends Controller
         $actual_name = $request->input('actual_name');
         $wechat_id = $request->input('wechat_id');
         $taobao_id = $request->input('taobao_id');
+        $idCard = $request->input('id_card');
         $alipay_id = $request->input('alipay_id');
 
         // 判断字段.
@@ -64,13 +66,16 @@ class UserController extends Controller
         if(!$taobao_id){
             return $this->ajaxError('请输入淘宝帐号');
         }
+        if(!(new IDCardHelper())->isCard($idCard)){
+            return $this->ajaxError('身份证格式不符合规范');
+        }
         if(!preg_match('/^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$|^1[3456789]{1}\d{9}$/', $alipay_id)){
             return $this->ajaxError('支付宝帐号格式不符合规范');
         }
 
         // 执行更新数据.
         try{
-            (new UserService())->setUserInfo($userId, $actual_name, $wechat_id ,$taobao_id ,$alipay_id);
+            (new UserService())->setUserInfo($userId, $actual_name, $wechat_id, $taobao_id, $idCard, $alipay_id);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }
@@ -144,7 +149,7 @@ class UserController extends Controller
     }
 
     /**
-     * 获取学员位申请记录
+     * 获取推客位申请记录
      * @param Request $request
      * @return static
      */
@@ -163,7 +168,7 @@ class UserController extends Controller
     }
 
     /**
-     * 获取学员招募记录
+     * 获取推客招募记录
      * @param Request $request
      * @return static
      */
