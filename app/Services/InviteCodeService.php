@@ -316,7 +316,7 @@ class InviteCodeService{
             // 生成订单字段.
             switch ($memberType){
                 case -1:
-                    throw new \LogicException('用户已经是VIP');
+                    throw new \LogicException('用户已经是终身用户');
                     break;
                 case 5 :
                     throw new \LogicException('试用用户不支持续费');
@@ -398,7 +398,7 @@ class InviteCodeService{
     }
 
     /**
-     * 升级VIP
+     * 升级终身码
      * @param $userId
      * @param $newCode
      * @throws \Exception
@@ -420,7 +420,7 @@ class InviteCodeService{
             $userCodeType = $userCode['effective_days'];
 
             if($userCodeType == '-1'){
-                throw new \LogicException('用户已经是VIP');
+                throw new \LogicException('用户已经是终身用户');
             }
 
             // 验证邀请码有效性.

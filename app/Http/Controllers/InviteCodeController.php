@@ -136,7 +136,7 @@ class InviteCodeController extends Controller
     }
 
     /**
-     * 升级VIP
+     * 升级终身码
      * @param Request $request
      * @return static
      */

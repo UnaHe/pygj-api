@@ -81,7 +81,7 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::post('/invideCode/renewFee', "InviteCodeController@renewFee");
 
         /**
-         * 升级VIP
+         * 升级终身码
          */
         Route::post('/invideCode/upVip', "InviteCodeController@upVip");
 
