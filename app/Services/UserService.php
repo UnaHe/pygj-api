@@ -393,13 +393,15 @@ class UserService{
             // 时间段学员招募.
             $member = $Order->whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2],
+                ['status', 100],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
             ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
         }else if(!$startTime && !$endTime) {
             // 学员招募.
             $member = $Order->whereIn('target_user_id', $usersId)->where([
-                ['type', '<=', 2]
+                ['type', '<=', 2],
+                ['status', 100],
             ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
         }else{
             // 初始化时间.
@@ -408,6 +410,7 @@ class UserService{
             // 单天学员招募.
             $member = $Order->whereIn('target_user_id', $usersId)->where([
                 ['type', '<=', 2],
+                ['status', 100],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
             ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
@@ -435,6 +438,7 @@ class UserService{
                 // 我的时间段招募.
                 $data = $Order->where([
                     ['type', '<=', 2],
+                    ['status', 100],
                     ['target_user_id', $userId],
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
@@ -443,6 +447,7 @@ class UserService{
                 // 我的招募.
                 $data = $Order->where([
                     ['type', '<=', 2],
+                    ['status', 100],
                     ['target_user_id', $userId]
                 ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
             }else{
@@ -452,6 +457,7 @@ class UserService{
                 // 我的单天招募.
                 $data = $Order->where([
                     ['type', '<=', 2],
+                    ['status', 100],
                     ['target_user_id', $userId],
                     ['created_at', '>=', $startTime],
                     ['created_at', '<=', $endTime]
