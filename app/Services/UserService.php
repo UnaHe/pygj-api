@@ -677,12 +677,12 @@ class UserService{
             $res = Order::create([
                 'type' => $type,
                 'subtype' => $subtype,
-                'number' => $money,
                 'target_user_id' => $userId,
                 'user_id' => $userId,
                 'user_phone' => $user_phone,
                 'user_name' => $user_name,
                 'user_grade' => $user_grade,
+                'unit_price' => $money,
                 'status' => $status,
                 'remark' => $remark,
                 'date' => date('Y-m-d'),

@@ -42,8 +42,8 @@ class InviteCodeController extends Controller
         $types = $request->input('types');
         $num = $request->input('codenum');
 
-        if(!preg_match('/^[1-9]\d?\d?\d?$/', $num)){
-            return $this->ajaxError('数量应该为1-9999');
+        if(!preg_match('/^[1-9]\d?\d?$/', $num)){
+            return $this->ajaxError('数量应该为1-999');
         }
 
         if(!preg_match('/^-1|30|90|365|5$/', $types)){
