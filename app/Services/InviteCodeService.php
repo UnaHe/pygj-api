@@ -166,6 +166,7 @@ class InviteCodeService{
     public function transfer($userId, $code, $types, $toName, $toPhone){
         try{
             $InviteCode = new InviteCode();
+
             // 码信息.
             $codes = explode(',', $code);
             $codeInfo = $InviteCode->whereIn('invite_code', $codes)->where([
@@ -173,6 +174,9 @@ class InviteCodeService{
                 'status' => InviteCode::STATUS_UNUSE
             ])->select('invite_code')->get();
             $codeInfoArray = $codeInfo->toArray();
+            if(!$codeInfoArray){
+                throw new \LogicException('邀请码错误');
+            }
             $codeArray = [];
             $codeRemark = '';
             $num = 0;
@@ -200,9 +204,26 @@ class InviteCodeService{
                 throw new \LogicException('真实姓名不正确或对方未使用管家');
             }
 
-            // 构建订单字段.
+            // 生成订单字段.
+            switch ($types){
+                case 30:
+                    $subtype = 51;
+                    break;
+                case 90:
+                    $subtype = 52;
+                    break;
+                case 365:
+                    $subtype = 53;
+                    break;
+                case -1:
+                    $subtype = 54;
+                    break;
+                case 5:
+                    $subtype = 55;
+                    break;
+            }
+
             $type = Order::ORDER_TRANSFER;
-            $subtype = 51;
             $user_id  = $toUserArray['id'];
             $user_phone  = $toPhone;
             $user_name = $toUserName;
@@ -231,7 +252,9 @@ class InviteCodeService{
 
             if($res){
                 $InviteCode->whereIn('invite_code', $codeArray)->select('id')->update(['user_id' => $user_id]);
-                Redis::lpush(Order::REDIS_QUEUE, $res);
+                if ($subtype === 54) {
+                    Redis::lpush(Order::REDIS_QUEUE, $res);
+                }
             } else {
                 DB::rollBack();
                 throw new \LogicException('转让邀请码失败');
