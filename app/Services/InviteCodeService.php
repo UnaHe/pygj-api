@@ -167,7 +167,8 @@ class InviteCodeService{
         try{
             $InviteCode = new InviteCode();
             // 码信息.
-            $codeInfo = $InviteCode->whereIn('invite_code', $code)->where([
+            $codes = explode(',', $code);
+            $codeInfo = $InviteCode->whereIn('invite_code', $codes)->where([
                 'user_id'=> $userId,
                 'status' => InviteCode::STATUS_UNUSE
             ])->select('invite_code')->get();
