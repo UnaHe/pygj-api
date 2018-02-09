@@ -160,6 +160,16 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
          */
         Route::get('/invite/inviteLink', "UserController@inviteLink");
 
+        /**
+         * 	提现审批记录
+         */
+        Route::get('/withdrawals/ApprovedList', "OrderController@ApprovedList");
+
+        /**
+         * 	提现批准
+         */
+        Route::post('/withdrawals/ApprovedOrTurnDown', "OrderController@ApprovedOrTurnDown");
+
     });
 
     /**

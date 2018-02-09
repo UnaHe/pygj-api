@@ -7,8 +7,10 @@
  */
 namespace App\Services;
 
+use App\Helpers\QueryHelper;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\OrderProcess;
 use App\Models\CodePrice;
 use App\Models\InviteCode;
 use App\Models\UserIncome;
@@ -369,6 +371,7 @@ class OrderService{
                     break;
             }
             $type = Order::ORDER_UPVIP;
+            $to_user_id = 0;
             $num = 1;
             $user_phone  = $userArr['phone'];
             $user_name = $userArr['user_info']['actual_name'];
@@ -376,13 +379,12 @@ class OrderService{
             $unit_price = CodePrice::where('duration', $newCodeType)->pluck('code_price')->first();
             $status = 100;
 
-            // 创建升级订单.
-            DB::beginTransaction();
-            $res = Order::create([
+            $params = [
                 'type' => $type,
                 'subtype' => $subtype,
                 'number' => $num,
                 'target_user_id' => $userId,
+                'to_user_id' => $to_user_id,
                 'user_id' => $userId,
                 'user_phone' => $user_phone,
                 'user_name' => $user_name,
@@ -392,12 +394,19 @@ class OrderService{
                 'status' => $status,
                 'remark' => $remark,
                 'date' => date('Y-m-d'),
-            ]);
+            ];
+
+            // 创建升级订单.
+            DB::beginTransaction();
+
+            $res = Order::create($params);
 
             if($res){
+                // 更改用户邀请码.
                 $user->invite_code = $newCode;
                 $user->expiry_time = $newEndTime;
                 $user->save();
+                // 更改邀请码状态.
                 $isCode->status = InviteCode::STATUS_USED;
                 $isCode->update_time = date('Y-m-d H:i:s');
                 $isCode->save();
@@ -441,7 +450,7 @@ class OrderService{
             $status = 1;
             $remark = $user['user_info']['alipay_id'];
 
-            // 创建申请订单.
+            // 创建提现订单.
             $res = Order::create([
                 'type' => $type,
                 'subtype' => $subtype,
@@ -566,8 +575,7 @@ class OrderService{
             $total_price = $unit_price * $num;
             $status = 100;
 
-            // 创建申请订单.
-            $res = Order::create([
+            $params = [
                 'type' => $type,
                 'subtype' => $subtype,
                 'number' => $num,
@@ -582,12 +590,22 @@ class OrderService{
                 'status' => $status,
                 'remark' => rtrim($codeRemark, ','),
                 'date' => date('Y-m-d'),
-            ]);
+            ];
 
-            if(!$res) {
+            // 创建转码订单.
+            DB::beginTransaction();
+
+            $res = Order::create($params);
+
+            if($res){
+                $InviteCode->whereIn('invite_code', $codeArray)->select('id')->update(['user_id' => $user_id]);
+            } else {
+                DB::rollBack();
                 throw new \LogicException('转让邀请码失败');
             }
+            DB::commit();
         }catch (\Exception $e){
+            DB::rollBack();
             $error = $e instanceof \LogicException ? $e->getMessage() : '转让邀请码失败';
             throw new \Exception($error);
         }
@@ -658,6 +676,123 @@ class OrderService{
             }
         }catch (\Exception $e){
             $error = $e instanceof \LogicException ? $e->getMessage() : '提交失败';
+            throw new \Exception($error);
+        }
+    }
+
+    /**
+     * 提现审批记录
+     * @param $userId
+     * @param string $startTime
+     * @param string $endTime
+     * @param $status
+     * @return mixed
+     */
+    public function ApprovedList($userId, $startTime = '', $endTime = '', $status){
+
+        // 记录类型.
+        $compare = ($status == 1) ? '=' : '<>';
+
+        if($startTime && $endTime){
+            $startTime = $startTime.' 00:00:00';
+            $endTime = $endTime.' 23:59:59';
+            // 查询时间范围订单.
+            $data = Order::where([
+                ['type', 4],
+                ['to_user_id', $userId],
+                ['status', $compare, 1],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->select(['id', 'user_name', 'user_phone', 'unit_price', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
+        }else if(!$startTime && !$endTime) {
+            // 查询订单.
+            $data = Order::where([
+                ['type', 4],
+                ['to_user_id', $userId],
+                ['status', $compare, 1]
+            ])->select(['id', 'user_name', 'user_phone', 'unit_price', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
+        }else{
+            $endTime = $startTime.' 23:59:59';
+            $startTime = $startTime.' 00:00:00';
+            // 查询单天订单.
+            $data = Order::where([
+                ['type', 4],
+                ['to_user_id', $userId],
+                ['status', $compare, 1],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->select(['id', 'user_name', 'user_phone', 'unit_price', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
+        }
+
+        // 分页.
+        $data = (new QueryHelper())->pagination($data)->get();
+
+        $OrderProcess = new OrderProcess();
+
+        foreach ($data as $k => $v) {
+            if($v['status'] === -1){
+                $data[$k]['remark'] = $OrderProcess->where('order_id', $v['id'])->orderBy('created_at', 'desc')->pluck('remark')->first();
+            }
+            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[99];
+        }
+
+        return $data;
+    }
+
+    /**
+     * 提现审批
+     * @param $userId
+     * @param $orderId
+     * @param $types
+     * @param $remark
+     * @return mixed
+     * @throws \Exception
+     */
+    public function ApprovedOrTurnDown($userId, $orderId, $types, $remark=''){
+        try{
+            // 订单信息.
+            $orderInfo = Order::where([
+                'id' => $orderId,
+                'type' => 4,
+                'status' => 1,
+                'to_user_id' => $userId,
+            ])->first();
+
+            if(!$orderInfo){
+                throw new \LogicException('记录不存在');
+            }
+
+            // 查询用户.
+            $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
+
+            // 创建订单审批记录表.
+            $actualName = $user['user_info']['actual_name'];
+            $bizBeforeStatus = 1;
+            $bizRearStatus = $types;
+            $OrderProcessParams = [
+                'order_id' => $orderId,
+                'biz_user_id' => $userId,
+                'biz_user_name' => $actualName,
+                'biz_before_status' => $bizBeforeStatus,
+                'biz_rear_status' => $bizRearStatus,
+                'remark' => $remark,
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+
+            // 批准提现申请.
+            DB::beginTransaction();
+            $res = $orderInfo->update(['status' => $types]);
+
+            if($res){
+                OrderProcess::create($OrderProcessParams);
+            } else {
+                DB::rollBack();
+                throw new \LogicException('批准失败');
+            }
+            DB::commit();
+        }catch (\Exception $e){
+            DB::rollBack();
+            $error = $e instanceof \LogicException ? $e->getMessage() : '批准失败';
             throw new \Exception($error);
         }
     }
