@@ -40,6 +40,11 @@ class Order extends Model
     const ORDER_TRANSFER = 5;
 
     /**
+     * 6:邀请订单
+     */
+    const ORDER_INVITE = 6;
+
+    /**
      * Redis Key
      */
     const REDIS_QUEUE= "manager:queue:complate_order_info";

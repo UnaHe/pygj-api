@@ -266,42 +266,6 @@ class UserController extends Controller
     }
 
     /**
-     * 提现申请
-     * @param Request $request
-     * @return static
-     */
-    public function withdrawal(Request $request){
-        $userId = $request->user()->id;
-        $money = $request->input('money');
-
-        // 提交申请.
-        try{
-            (new UserService())->withdrawal($userId, $money);
-        }catch (\Exception $e){
-            return $this->ajaxError($e->getMessage());
-        }
-
-        return $this->ajaxSuccess();
-    }
-
-    /**
-     * 可提现金额
-     * @param Request $request
-     * @return static
-     */
-    public function withdrawalsNum(Request $request){
-        $userId = $request->user()->id;
-
-        try{
-            $data = (new UserService())->withdrawalsNum($userId);
-        }catch (\Exception $e){
-            return $this->ajaxError($e->getMessage());
-        }
-
-        return $this->ajaxSuccess($data);
-    }
-
-    /**
      * 提现记录
      * @param Request $request
      * @return static
@@ -311,6 +275,24 @@ class UserController extends Controller
 
         try{
             $data = (new UserService())->withdrawalRecords($userId);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
+    }
+
+    /**
+     * 生成邀请链接
+     * @param Request $request
+     * @return static
+     * @throws \Exception
+     */
+    public function inviteLink(Request $request){
+        $userId = $request->user()->id;
+
+        try{
+            $data = (new UserService())->inviteLink($userId);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }

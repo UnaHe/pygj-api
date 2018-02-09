@@ -63,7 +63,7 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 申请邀请码
          */
-        Route::post('/invideCode/appInviteCode', "InviteCodeController@appInviteCode");
+        Route::post('/invideCode/appInviteCode', "OrderController@appInviteCode");
 
         /**
          * 派发邀请码列表
@@ -73,17 +73,17 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 转让邀请码
          */
-        Route::post('/invideCode/transfer', "InviteCodeController@transfer");
+        Route::post('/invideCode/transfer', "OrderController@transfer");
 
         /**
          * 续费
          */
-        Route::post('/invideCode/renewFee', "InviteCodeController@renewFee");
+        Route::post('/invideCode/renewFee', "OrderController@renewFee");
 
         /**
          * 升级终身码
          */
-        Route::post('/invideCode/upVip', "InviteCodeController@upVip");
+        Route::post('/invideCode/upVip', "OrderController@upVip");
 
         /**
          * 创建消息
@@ -128,12 +128,12 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 提现申请
          */
-        Route::post('/withdrawal', "UserController@withdrawal");
+        Route::post('/withdrawal', "OrderController@withdrawal");
 
         /**
          * 可提现金额
          */
-        Route::get('/withdrawalsNum', "UserController@withdrawalsNum");
+        Route::get('/withdrawalsNum', "OrderController@withdrawalsNum");
 
         /**
          * 提现记录
@@ -155,7 +155,17 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
          */
         Route::get('/member/applyList', "UserController@applyList");
 
+        /**
+         * 生成邀请链接
+         */
+        Route::get('/invite/inviteLink', "UserController@inviteLink");
+
     });
+
+    /**
+     * 邀请订单
+     */
+    Route::post('/invite/acceptInvite', "OrderController@acceptInvite");
 
 });
 

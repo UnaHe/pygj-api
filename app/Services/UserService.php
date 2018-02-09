@@ -73,8 +73,8 @@ class UserService{
     /**
      * 获取我的推客列表
      * @param $userId
+     * @param int $page
      * @return array
-     * @throws \Exception
      */
     public function getMyMember($userId, $page=1){
         $User = new User();
@@ -87,7 +87,7 @@ class UserService{
         ]);
         $query->leftjoin($User->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
         $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
-        $query->select(["user.id", "user.phone", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"]);
+        $query->select(["user.id", "user.phone", "user.reg_time", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"]);
 
         //我的推客
         $users = (new QueryHelper())->pagination($query)->get()->toArray();
@@ -107,7 +107,7 @@ class UserService{
                 if($masterUserId){
                     $masterUser = $User->from($User->getTable()." as user")->where('user.id', $masterUserId)
                         ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")
-                        ->select(["user.id", "user.phone", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"])->first();
+                        ->select(["user.id", "user.phone", "user.reg_time", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"])->first();
                     if($masterUser){
                         $masterUser['type'] = 2;
                         $masterUser['type_desc'] = "师傅";
@@ -240,7 +240,7 @@ class UserService{
         ]);
         $query->leftjoin($User->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
         $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
-        $query->select(["user.id", "user.phone", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"]);
+        $query->select(["user.id", "user.phone", "user.reg_time", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"]);
 
         // 查找关键字.
         $query->where(function($query) use($keyword){
@@ -266,7 +266,7 @@ class UserService{
                 // 匹配师傅关键字.
                 $masterUser = $User->from($User->getTable()." as user")->where("user.id", $masterUserId)
                     ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")
-                    ->select(["user.id", "user.phone", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"])
+                    ->select(["user.id", "user.phone", "user.reg_time", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"])
                     ->where(function($query) use($keyword){
                         $query->where('user.phone', 'like', "%$keyword%")
                             ->orwhere('userinfo.wechat_id', 'like', "%$keyword%");
@@ -361,27 +361,27 @@ class UserService{
     /**
      * 获取推客招募记录
      * @param $userId
-     * @param $startTime
-     * @param $endTime
+     * @param int $page
+     * @param string $startTime
+     * @param string $endTime
      * @return mixed
-     * @throws \Exception
      */
     public function recruit($userId, $page=1, $startTime='', $endTime=''){
         $User = new User();
-        $InviteCode = new InviteCode();
-        $UserInfo = new UserInfo();
         $Order = new Order();
 
-        $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
-            'invite.user_id' => $userId,
-            'invite.status' => InviteCode::STATUS_USED
-        ]);
-        $query->leftjoin($User->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
-        $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
-        $query->select(["user.id", "user.phone", "userinfo.wechat_id"]);
+        $me = $User->where('id', $userId)->with('UserInfo')->first(['id', 'phone', 'grade', 'path'])->toArray();
+        if ($me['grade'] === 3) {
+            $query = $User->where([
+                ['path', 'like', "$userId:%"],
+                ['grade', '<>', 3]
+            ])->with('UserInfo');
+        } else {
+            $query = $User->where('path', 'like', $me['path']."$userId:%")->with('UserInfo');
+        }
 
         // 我的推客.
-        $users = $query->get()->toArray();
+        $users = $query->get(['id', 'phone'])->toArray();
 
         // 我的推客ID.
         $usersId = [];
@@ -428,11 +428,7 @@ class UserService{
         // 我的招募.
         if ($page == 1) {
             // 我的用户信息.
-            $me = $User->where('id', $userId)->with('UserInfo')->first(['id', 'phone'])->toArray();
-            $meInfo['id'] = $me['id'];
-            $meInfo['phone'] = $me['phone'];
-            $meInfo['wechat_id'] = $me['user_info']['wechat_id'];
-            array_push($users, $meInfo);
+            array_unshift($users, $me);
 
             if($startTime && $endTime){
                 // 初始化时间.
@@ -487,7 +483,7 @@ class UserService{
         $info = [];
         foreach ($users as $k => $v) {
             $info[$v['id']]['phone'] = $v['phone'];
-            $info[$v['id']]['wechat_id'] = $v['wechat_id'];
+            $info[$v['id']]['wechat_id'] = $v['user_info']['wechat_id'];
         }
 
         // 分组计数,合计.
@@ -656,77 +652,6 @@ class UserService{
     }
 
     /**
-     * 提现申请
-     * @param $userId
-     * @param $money
-     * @return mixed
-     * @throws \Exception
-     */
-    public function withdrawal($userId, $money){
-        try{
-            // 查询我的可提现金额.
-            $withdrawalsNum = $this->withdrawalsNum($userId);
-            $allowMoney = $withdrawalsNum - $money;
-            if($allowMoney < 0){
-                throw new \LogicException('最大可提现金额'.$withdrawalsNum.'元');
-            }
-
-            // 我的用户信息.
-            $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'grade'])->toArray();
-
-            $type = Order::ORDER_EXTRACT;
-            $subtype = 41;
-            $user_phone  = $user['phone'];
-            $user_name = $user['user_info']['actual_name'];
-            $user_grade = $user['grade'] ? : 1;
-            $status = 1;
-            $remark = $user['user_info']['alipay_id'];
-
-            // 创建申请订单.
-            $res = Order::create([
-                'type' => $type,
-                'subtype' => $subtype,
-                'target_user_id' => $userId,
-                'user_id' => $userId,
-                'user_phone' => $user_phone,
-                'user_name' => $user_name,
-                'user_grade' => $user_grade,
-                'unit_price' => $money,
-                'status' => $status,
-                'remark' => $remark,
-                'date' => date('Y-m-d'),
-            ]);
-
-            if(!$res){
-                throw new \LogicException('提现申请失败');
-            }
-        }catch (\Exception $e){
-            $error = $e instanceof \LogicException ? $e->getMessage() : '提现申请失败';
-            throw new \Exception($error);
-        }
-    }
-
-    /**
-     * 可提现金额
-     * @param $userId
-     * @return mixed
-     * @throws \Exception
-     */
-    public function withdrawalsNum($userId){
-        $incomeOrder = Order::where([
-            'type' => 4,
-            'target_user_id' => $userId,
-            ['status', '>', -1]
-        ])->sum('number');
-
-        $income = UserIncome::where('user_id', $userId)->sum('income_num');
-
-        $withdrawalsNum = ($income - $incomeOrder) > 0 ? ($income - $incomeOrder) : 0;
-
-        return $withdrawalsNum;
-    }
-
-    /**
      * 提现记录
      * @param $userId
      * @return mixed
@@ -736,6 +661,19 @@ class UserService{
         $data = Order::where(['type' => 4, 'target_user_id' => $userId]);
         $withdrawalRecords = (new QueryHelper())->pagination($data)->get()->toArray();
         return $withdrawalRecords;
+    }
+
+    /**
+     * 生成邀请链接
+     * @param $userId
+     * @return mixed
+     * @throws \Exception
+     */
+    public function inviteLink($userId){
+        // 我的用户信息.
+        $user = User::where("id", $userId)->first(['id', 'phone'])->toArray();
+        $url = 'http://'.config('domains.pygj_domains').'/invite/'.$user['phone'];
+        return $url;
     }
 
 }
