@@ -58,11 +58,30 @@ class CaptchaService
      * @param $code
      * @return bool
      */
-    public function checkSmsCode($codeId, $code){
-        $cacheKey = "smsCode.".$codeId;
+    public function checkSmsCode($mobile, $codeId, $code){
+        $cacheKey = "smsCode.".$mobile.".".$codeId;
 
         if(Cache::get($cacheKey) == $code){
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 发送邀请用户邀请码
+     * @param $mobile
+     * @param $inviteCodes
+     * @return bool|string
+     * @throws \Exception
+     */
+    public function sendInviteCode($mobile, $inviteCodes){
+        $codeId = md5(__METHOD__.uniqid().time());
+        $cacheKey = "smsInviteCode.".$codeId;
+
+        if((new SmsHelper())->sms($mobile, config('sms.signname'), 'SMS_125117661', ['code'=>$inviteCodes])){
+            Cache::put($cacheKey, $inviteCodes, config('sms.code_expire_time'));
+            return $codeId;
         }
 
         return false;

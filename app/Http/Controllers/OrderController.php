@@ -195,14 +195,14 @@ class OrderController extends Controller
      * @param Request $request
      * @return static
      */
-    public function ApprovedList(Request $request){
+    public function approvedList(Request $request){
         $userId = $request->user()->id;
         $startTime = $request->input('start_time');
         $endTime = $request->input('end_time');
         $status = $request->input('status');
 
         try{
-            $data = (new OrderService())->ApprovedList($userId, $startTime, $endTime, $status);
+            $data = (new OrderService())->approvedList($userId, $startTime, $endTime, $status);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }
@@ -215,7 +215,7 @@ class OrderController extends Controller
      * @param Request $request
      * @return static
      */
-    public function ApprovedOrTurnDown(Request $request){
+    public function approvedOrTurnDown(Request $request){
         $userId = $request->user()->id;
         $orderId = $request->input('order_id');
         $types = $request->input('types');
@@ -230,12 +230,96 @@ class OrderController extends Controller
         }
 
         try{
-            $data = (new OrderService())->ApprovedOrTurnDown($userId, $orderId, $types, $remark);
+            (new OrderService())->approvedOrTurnDown($userId, $orderId, $types, $remark);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess();
+    }
+
+    /**
+     * 订单审批记录
+     * @param Request $request
+     * @return static
+     */
+    public function ordersApprovedList(Request $request){
+        $userId = $request->user()->id;
+        $startTime = $request->input('start_time');
+        $endTime = $request->input('end_time');
+        $status = $request->input('status');
+
+        try{
+            $data = (new OrderService())->ordersApprovedList($userId, $startTime, $endTime, $status);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }
 
         return $this->ajaxSuccess($data);
+    }
+
+    /**
+     * 订单审批
+     * @param Request $request
+     * @return static
+     */
+    public function ordersApprovedOrTurnDown(Request $request){
+        $userId = $request->user()->id;
+        $orderId = $request->input('order_id');
+        $types = $request->input('types');
+        $remark = $request->input('remark');
+
+        if(!preg_match('/^-1|100$/', $types)){
+            return $this->ajaxError('审批类型不正确');
+        }
+
+        if($types == 100 && $remark){
+            return $this->ajaxError('批准无备注');
+        }
+
+        try{
+            (new OrderService())->ordersApprovedOrTurnDown($userId, $orderId, $types, $remark);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess();
+    }
+
+    /**
+     * 半货半款收货
+     * @param Request $request
+     * @return static
+     */
+    public function ordersReceiving(Request $request){
+        $userId = $request->user()->id;
+        $orderId = $request->input('order_id');
+
+        try{
+            $data = (new OrderService())->ordersReceiving($userId, $orderId);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
+    }
+
+    /**
+     * 确认收货
+     * @param Request $request
+     * @return static
+     */
+    public function ordersConfirmReceiving(Request $request){
+        $userId = $request->user()->id;
+        $inviteCode = $request->input('invite_code');
+
+        try{
+            (new OrderService())->ordersConfirmReceiving($userId, $inviteCode);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess();
     }
 
 }

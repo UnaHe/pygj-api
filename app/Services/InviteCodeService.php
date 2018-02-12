@@ -42,7 +42,7 @@ class InviteCodeService{
      * @return mixed
      */
     public function getListByUserId($userId){
-        $inviteCodes =  InviteCode::where('user_id', $userId)->select(["invite_code", "status"])->orderBy("status","asc")->get();
+        $inviteCodes = InviteCode::where('user_id', $userId)->select(["invite_code", "status"])->orderBy("status","asc")->get();
 
         foreach ($inviteCodes as &$inviteCode){
             if($inviteCode['status'] == InviteCode::STATUS_UNUSE){
@@ -59,7 +59,7 @@ class InviteCodeService{
      */
     public function sendInviteList($userId){
         // 查询可用邀请码.
-        $data =  InviteCode::where([
+        $data = InviteCode::where([
             'user_id' => $userId,
             'status' => InviteCode::STATUS_UNUSE
         ])->select(['effective_days','invite_code'])->get();

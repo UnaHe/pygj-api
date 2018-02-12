@@ -163,12 +163,32 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 	提现审批记录
          */
-        Route::get('/withdrawals/ApprovedList', "OrderController@ApprovedList");
+        Route::get('/withdrawals/approvedList', "OrderController@approvedList");
 
         /**
-         * 	提现批准
+         * 	提现审批
          */
-        Route::post('/withdrawals/ApprovedOrTurnDown', "OrderController@ApprovedOrTurnDown");
+        Route::post('/withdrawals/approvedOrTurnDown', "OrderController@approvedOrTurnDown");
+
+        /**
+         * 	订单审批记录
+         */
+        Route::get('/order/ordersApprovedList', "OrderController@ordersApprovedList");
+
+        /**
+         * 	订单审批
+         */
+        Route::post('/order/ordersApprovedOrTurnDown', "OrderController@ordersApprovedOrTurnDown");
+
+        /**
+         * 	半货半款收货
+         */
+        Route::get('/order/ordersReceiving', "OrderController@ordersReceiving");
+
+        /**
+         * 	确认收货
+         */
+        Route::post('/order/ordersConfirmReceiving', "OrderController@ordersConfirmReceiving");
 
     });
 

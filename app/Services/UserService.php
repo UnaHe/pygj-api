@@ -76,7 +76,7 @@ class UserService{
      * @param int $page
      * @return array
      */
-    public function getMyMember($userId, $page=1){
+    public function getMyMember($userId, $page = 1){
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
@@ -169,31 +169,27 @@ class UserService{
      * @throws \Exception
      */
     public function getUserInfo($userId){
-        try{
-            // 查询用户.
-            $user = User::where("id", $userId)->with('UserInfo')->with('UserGrade')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
-            if(!$user){
-                throw new \LogicException("用户不存在");
-            }
-            $user['upgrade'] = $user['user_grade']['upgrade_invitecode_num'];
-            $user['actual_name'] = $user['user_info']['actual_name'];
-            $user['wechat_id'] = $user['user_info']['wechat_id'];
-            $user['taobao_id'] = $user['user_info']['taobao_id'];
-            $user['alipay_id'] = $user['user_info']['alipay_id'];
-            unset($user['user_grade']);
-            unset($user['user_info']);
-
-            // 是否过期.
-            if ($user['expiry_time'] && (strtotime($user['expiry_time']) - time()) < 0) {
-                $user['is_expiry'] = 1;
-            } else {
-                $user['is_expiry'] = 0;
-            }
-            return $user;
-        }catch (\Exception $e){
-            $error = $e instanceof \LogicException ? $e->getMessage() : '用户不存在';
-            throw new \Exception($error);
+        // 查询用户.
+        $user = User::where("id", $userId)->with('UserInfo')->with('UserGrade')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
+        if(!$user){
+            throw new \LogicException("用户不存在");
         }
+        $user['upgrade'] = $user['user_grade']['upgrade_invitecode_num'];
+        $user['actual_name'] = $user['user_info']['actual_name'];
+        $user['wechat_id'] = $user['user_info']['wechat_id'];
+        $user['taobao_id'] = $user['user_info']['taobao_id'];
+        $user['alipay_id'] = $user['user_info']['alipay_id'];
+        unset($user['user_grade']);
+        unset($user['user_info']);
+
+        // 是否过期.
+        if ($user['expiry_time'] && (strtotime($user['expiry_time']) - time()) < 0) {
+            $user['is_expiry'] = 1;
+        } else {
+            $user['is_expiry'] = 0;
+        }
+
+        return $user;
     }
 
     /**
@@ -291,7 +287,7 @@ class UserService{
      * @return mixed
      * @throws \Exception
      */
-    public function applyList($userId, $startTime='', $endTime=''){
+    public function applyList($userId, $startTime = '', $endTime = ''){
         if($startTime && $endTime){
             $startTime = $startTime.' 00:00:00';
             $endTime = $endTime.' 23:59:59';
@@ -366,7 +362,7 @@ class UserService{
      * @param string $endTime
      * @return mixed
      */
-    public function recruit($userId, $page=1, $startTime='', $endTime=''){
+    public function recruit($userId, $page = 1, $startTime = '', $endTime = ''){
         $User = new User();
         $Order = new Order();
 
@@ -586,7 +582,7 @@ class UserService{
      * @return array
      * @throws \Exception
      */
-    public function incomeList($userId, $type, $startTime, $endTime){
+    public function incomeList($userId, $type, $startTime = '', $endTime = ''){
         $Carbon = new Carbon();
 
         if($type == 1){
