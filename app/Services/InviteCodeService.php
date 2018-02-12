@@ -62,11 +62,15 @@ class InviteCodeService{
         $data = InviteCode::where([
             'user_id' => $userId,
             'status' => InviteCode::STATUS_UNUSE
-        ])->select(['effective_days','invite_code'])->get();
+        ])->select(['effective_days','invite_code', 'code_type'])->get();
 
         $result = [];
         foreach($data as $k=>$v){
-            $result[$v['effective_days']][] = $v['invite_code'];
+            if($v['code_type'] !== 0){
+                $result[1][] = $v['invite_code'];
+            }else{
+                $result[$v['effective_days']][] = $v['invite_code'];
+            }
         }
 
         $num = 0;

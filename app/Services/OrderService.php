@@ -567,6 +567,9 @@ class OrderService{
                 case 5:
                     $subtype = 55;
                     break;
+                case 1:
+                    $subtype = 56;
+                    break;
             }
 
             $type = Order::ORDER_TRANSFER;

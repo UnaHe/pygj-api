@@ -79,7 +79,7 @@ class CaptchaService
         $codeId = md5(__METHOD__.uniqid().time());
         $cacheKey = "smsInviteCode.".$codeId;
 
-        if((new SmsHelper())->sms($mobile, config('sms.signname'), 'SMS_125117661', ['code'=>$inviteCodes])){
+        if((new SmsHelper())->sms($mobile, config('sms.signname'), 'SMS_125027869', ['code'=>$inviteCodes])){
             Cache::put($cacheKey, $inviteCodes, config('sms.code_expire_time'));
             return $codeId;
         }

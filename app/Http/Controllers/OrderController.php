@@ -141,7 +141,7 @@ class OrderController extends Controller
             return $this->ajaxError('参数错误');
         }
 
-        if(!preg_match('/^-1|30|90|365|5$/', $types)){
+        if(!preg_match('/^-1|30|90|365|5|1$/', $types)){
             return $this->ajaxError("邀请码类型不正确");
         }
 
@@ -149,7 +149,7 @@ class OrderController extends Controller
             return $this->ajaxError('姓名只支持中文或英文');
         }
 
-        if(!preg_match('/^1[3456789]{1}\d{9}$/', $toPhone)){
+        if(!preg_match('/^1[23456789]{1}\d{9}$/', $toPhone)){
             return $this->ajaxError('请输入正确的手机号码');
         }
 
