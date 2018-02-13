@@ -23,12 +23,12 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 未使用邀请码数量
          */
-        Route::get('/invideCode/unuseNum', "InviteCodeController@getUnUseInviteCodeNum");
+        Route::get('/inviteCode/unusedNum', "InviteCodeController@getUnUseInviteCodeNum");
 
         /**
          * 获取邀请码列表
          */
-        Route::get('/invideCode/getList', "InviteCodeController@getList");
+        Route::get('/inviteCode/getList', "InviteCodeController@getList");
 
         /**
          * 获取我的推客列表
@@ -43,7 +43,7 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 朋友搜索
          */
-        Route::post('/member/querFriend', "UserController@querFriend");
+        Route::post('/member/queryFriend', "UserController@querFriend");
 
         /**
          * 完善资料
@@ -63,27 +63,27 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         /**
          * 申请邀请码
          */
-        Route::post('/invideCode/appInviteCode', "OrderController@appInviteCode");
+        Route::post('/inviteCode/appInviteCode', "OrderController@appInviteCode");
 
         /**
          * 派发邀请码列表
          */
-        Route::post('/invideCode/sendInviteList', "InviteCodeController@sendInviteList");
+        Route::post('/inviteCode/sendInviteList', "InviteCodeController@sendInviteList");
 
         /**
          * 转让邀请码
          */
-        Route::post('/invideCode/transfer', "OrderController@transfer");
+        Route::post('/inviteCode/transfer', "OrderController@transfer");
 
         /**
          * 续费
          */
-        Route::post('/invideCode/renewFee', "OrderController@renewFee");
+        Route::post('/inviteCode/renewFee', "OrderController@renewFee");
 
         /**
          * 升级终身码
          */
-        Route::post('/invideCode/upVip', "OrderController@upVip");
+        Route::post('/inviteCode/upVip', "OrderController@upVip");
 
         /**
          * 创建消息

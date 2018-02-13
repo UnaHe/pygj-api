@@ -929,11 +929,15 @@ class OrderService{
                             $effectiveDays = -1;
                             break;
                     }
+                    // 通过邀请WAP提交订单的查询父级码.
+                    $codeIsWho = ($orderUserId == NUll) ? $targetUserId : $userId;
+
                     // 查询自己可用对应类型邀请码.
                     $unusedCodeNum = $InviteCode->where([
-                        'user_id' => $userId,
+                        'user_id' => $codeIsWho,
                         'status' => InviteCode::STATUS_UNUSE,
-                        'effective_days' => $effectiveDays
+                        'effective_days' => $effectiveDays,
+                        'is_dispatch' => 0,
                     ])->count();
 
                     $isUnused = $unusedCodeNum - $orderNum;
@@ -943,9 +947,10 @@ class OrderService{
 
                     // 获取订单对应数量类型的邀请码.
                     $transferCode = $InviteCode->where([
-                        'user_id' => $userId,
+                        'user_id' => $codeIsWho,
                         'status' => InviteCode::STATUS_UNUSE,
-                        'effective_days' => $effectiveDays
+                        'effective_days' => $effectiveDays,
+                        'is_dispatch' => 0,
                     ])->select('invite_code')->take($orderNum)->get();
 
                     $transferCodeArray = $transferCode->toArray();
@@ -974,6 +979,18 @@ class OrderService{
                 'created_at' => date('Y-m-d H:i:s')
             ];
 
+            // 正常邀请码.
+            $inviteCodeParams['user_id'] = $targetUserId;
+            // 半货半码.
+            if($orderSubtype == 16){
+                $inviteCodeParams['code_type'] = 1;
+            }
+            // 通过邀请WAP提交订单的用户发送邀请码.
+            if($orderUserId == NUll){
+                $inviteCodeParams['is_dispatch'] = 1;
+            }
+
+
             // 批准申请.
             DB::beginTransaction();
             $orderType = $orderInfo->update(['status' => $types]);
@@ -981,16 +998,11 @@ class OrderService{
             if($orderType){
                 OrderProcess::create($OrderProcessParams);
                 if($types == 100){
-                    if($orderSubtype !== 16){
-                        $inviteCodeParams = ['user_id' => $targetUserId];
-                    }else{
-                        $inviteCodeParams = ['user_id' => $targetUserId, 'code_type' => 1];
-                    }
                     $InviteCode->whereIn('invite_code', $transferCodeArray)->update($inviteCodeParams);
-                    // 向邀请用户发送邀请码.
-                    if($orderUserId == NUll){
-                        (new CaptchaService())->sendInviteCode($orderUserPhone, $remark);
-                    }
+                }
+                // 通过邀请WAP提交订单的用户发送邀请码.
+                if($orderUserId == NUll){
+                    (new CaptchaService())->sendInviteCode($orderUserPhone, $remark);
                 }
             } else {
                 DB::rollBack();
@@ -1073,18 +1085,18 @@ class OrderService{
             $types = $inviteCodeInfo['effective_days'];
             $unit_price = CodePrice::where('duration', $types)->pluck('code_price')->first();
             $codeUserId = $inviteCodeInfo['user_id'];
-            $hphg = ($inviteCodeInfo['code_type'] == NUll) ? 0 : 1;
+            $codeType = $inviteCodeInfo['code_type'];
             $redisParams = [
                 'type' => 3,
                 'code' => $inviteCode,
                 'uprice' => $unit_price,
                 'userId' => $codeUserId,
                 'effdays' => $types,
-                'hphg' => $hphg,
+                'codetype' => $codeType,
             ];
             $redisParamsJson = json_encode($redisParams, JSON_FORCE_OBJECT);
 
-            $res = $inviteCodeInfo->update(['code_type' => 2]);
+            $res = $inviteCodeInfo->update(['is_receiving' => 1]);
 
             if(!$res){
                 throw new \LogicException('确认失败');
