@@ -311,10 +311,11 @@ class OrderController extends Controller
      */
     public function ordersConfirmReceiving(Request $request){
         $userId = $request->user()->id;
+        $orderId = $request->input('order_id');
         $inviteCode = $request->input('invite_code');
 
         try{
-            (new OrderService())->ordersConfirmReceiving($userId, $inviteCode);
+            (new OrderService())->ordersConfirmReceiving($userId, $orderId, $inviteCode);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }

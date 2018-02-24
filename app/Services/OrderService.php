@@ -1040,19 +1040,23 @@ class OrderService{
         $codes = explode(',', $orderProcessRemark);
 
         $User = new User();
+        $InviteCode = new InviteCode();
         $arr = [];
         foreach($codes as $k=>$v){
             // 我的用户信息.
             $userInfo = $User->where("invite_code", $v)->with('UserInfo')->first(['id', 'phone', 'grade', 'path']);
+            $isReceiving = $InviteCode->where('invite_code', $v)->pluck('is_receiving')->first();
             if($userInfo){
                 $userInfo = $userInfo->toArray();
                 $arr[$k]['user_name'] = $userInfo['user_info']['actual_name'];
                 $arr[$k]['invite_code'] = $v;
                 $arr[$k]['user_phone'] = $userInfo['phone'];
+                $arr[$k]['is_receiving'] = $isReceiving;
             }else{
                 $arr[$k]['user_name'] = $orderInfo['user_name'];
                 $arr[$k]['invite_code'] = $v;
                 $arr[$k]['user_phone'] = $orderInfo['user_phone'];
+                $arr[$k]['is_receiving'] = $isReceiving;
             }
         }
 
@@ -1066,9 +1070,10 @@ class OrderService{
      * @return mixed
      * @throws \Exception
      */
-    public function ordersConfirmReceiving($userId, $inviteCode){
+    public function ordersConfirmReceiving($userId, $orderId, $inviteCode){
         try{
             $orderProcess = OrderProcess::where([
+                'order_id' => $orderId,
                 'biz_user_id' => $userId,
                 'biz_rear_status' => 100,
                 ['remark', 'like', "%$inviteCode%"]

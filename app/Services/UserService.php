@@ -80,22 +80,29 @@ class UserService{
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
-
-        $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
-            'invite.user_id' => $userId,
-            'invite.status' => InviteCode::STATUS_USED
-        ]);
-        $query->leftjoin($User->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
-        $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
-        $query->select(["user.id", "user.phone", "user.reg_time", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"]);
-
-        //我的推客
-        $users = (new QueryHelper())->pagination($query)->get()->toArray();
         $remarks = new FriendRemark();
-        foreach ($users as &$user){
-            $user['type'] = 1;
-            $user['type_desc'] = "推客";
-            $user['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $user['id']])->pluck('remark')->first();
+
+        $me = $User->where('id', $userId)->with('UserInfo')->first(['id', 'phone', 'grade', 'path'])->toArray();
+        if ($me['grade'] === 3) {
+            $query = $User->where([
+                ['path', 'like', "$userId:%"],
+                ['grade', '<>', 3]
+            ])->with('UserInfo');
+        } else {
+            $query = $User->where('path', 'like', $me['path']."$userId:%")->with('UserInfo');
+        }
+
+        // 我的推客.
+        $users = $query->get(['id', 'phone', 'reg_time'])->toArray();
+
+        foreach ($users as $k=>$v){
+            $users[$k]['actual_name'] = $v['user_info']['actual_name'];
+            $users[$k]['wechat_id'] = $v['user_info']['wechat_id'];
+            $users[$k]['taobao_id'] = $v['user_info']['taobao_id'];
+            $users[$k]['type'] = 1;
+            $users[$k]['type_desc'] = "推客";
+            $users[$k]['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $v['id']])->pluck('remark')->first();
+            unset($users[$k]['user_info']);
         }
 
         if($page == 1){
@@ -105,10 +112,12 @@ class UserService{
                 //师傅的用户id
                 $masterUserId = $InviteCode->where('invite_code', $inviteCode)->pluck('user_id')->first();
                 if($masterUserId){
-                    $masterUser = $User->from($User->getTable()." as user")->where('user.id', $masterUserId)
-                        ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")
-                        ->select(["user.id", "user.phone", "user.reg_time", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"])->first();
+                    $masterUser = $User->where('id', $masterUserId)->with('UserInfo')->first(['id', 'phone', 'reg_time'])->toArray();
                     if($masterUser){
+                        $masterUser['actual_name'] = $masterUser['user_info']['actual_name'];
+                        $masterUser['wechat_id'] = $masterUser['user_info']['wechat_id'];
+                        $masterUser['taobao_id'] = $masterUser['user_info']['taobao_id'];
+                        unset($masterUser['user_info']);
                         $masterUser['type'] = 2;
                         $masterUser['type_desc'] = "师傅";
                         $masterUser['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $masterUserId])->pluck('remark')->first();
