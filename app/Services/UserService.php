@@ -82,7 +82,7 @@ class UserService{
         $UserInfo = new UserInfo();
         $remarks = new FriendRemark();
 
-        $me = $User->where('id', $userId)->with('UserInfo')->first(['id', 'phone', 'grade', 'path'])->toArray();
+        $me = $User->where('id', $userId)->first(['id', 'phone', 'invite_code', 'grade', 'path'])->toArray();
         if ($me['grade'] === 3) {
             $query = $User->where([
                 ['path', 'like', "$userId:%"],
@@ -93,8 +93,9 @@ class UserService{
         }
 
         // 我的推客.
-        $users = $query->get(['id', 'phone', 'reg_time'])->toArray();
+        $users = (new QueryHelper())->pagination($query)->get(['id', 'phone', 'reg_time', 'invite_code'])->toArray();
 
+        // 更改数据格式,获取备注,父级信息.
         foreach ($users as $k=>$v){
             $users[$k]['actual_name'] = $v['user_info']['actual_name'];
             $users[$k]['wechat_id'] = $v['user_info']['wechat_id'];
@@ -102,17 +103,21 @@ class UserService{
             $users[$k]['type'] = 1;
             $users[$k]['type_desc'] = "推客";
             $users[$k]['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $v['id']])->pluck('remark')->first();
+            $users[$k]['master'] = $InviteCode->from($InviteCode->getTable()." as invite")
+                ->where('invite.invite_code', $v['invite_code'])
+                ->leftjoin($User->getTable()." as user", "user.id", '=', "invite.user_id")
+                ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")->first(['user.id', 'user.phone', 'userinfo.actual_name']);
             unset($users[$k]['user_info']);
         }
 
         if($page == 1){
             //我使用的邀请码
-            $inviteCode = $User->where("id", $userId)->pluck('invite_code')->first();
+            $inviteCode = $me['invite_code'];
             if($inviteCode){
                 //师傅的用户id
                 $masterUserId = $InviteCode->where('invite_code', $inviteCode)->pluck('user_id')->first();
                 if($masterUserId){
-                    $masterUser = $User->where('id', $masterUserId)->with('UserInfo')->first(['id', 'phone', 'reg_time'])->toArray();
+                    $masterUser = $User->where('id', $masterUserId)->with('UserInfo')->first(['id', 'phone', 'reg_time', 'invite_code'])->toArray();
                     if($masterUser){
                         $masterUser['actual_name'] = $masterUser['user_info']['actual_name'];
                         $masterUser['wechat_id'] = $masterUser['user_info']['wechat_id'];
@@ -121,10 +126,22 @@ class UserService{
                         $masterUser['type'] = 2;
                         $masterUser['type_desc'] = "师傅";
                         $masterUser['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $masterUserId])->pluck('remark')->first();
+                        $masterUser['master'] = $InviteCode->from($InviteCode->getTable()." as invite")
+                            ->where('invite.invite_code', $masterUser['invite_code'])
+                            ->leftjoin($User->getTable()." as user", "user.id", '=', "invite.user_id")
+                            ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")->first(['user.id', 'user.phone', 'userinfo.actual_name']);
                         array_push($users, $masterUser);
                     }
                 }
             }
+        }
+
+        // 更改数据格式.
+        foreach ($users as $k=>$v) {
+            $users[$k]['master_id'] = $v['master']['id'];
+            $users[$k]['master_phone'] = $v['master']['phone'];
+            $users[$k]['master_actual_name'] = $v['master']['actual_name'];
+            unset($users[$k]['master']);
         }
 
         return $users;
@@ -237,15 +254,20 @@ class UserService{
         $User = new User();
         $InviteCode = new InviteCode();
         $UserInfo = new UserInfo();
+        $remarks = new FriendRemark();
 
         // 查找我的推客.
-        $query = $InviteCode->from($InviteCode->getTable()." as invite")->where([
-            'invite.user_id' => $userId,
-            'invite.status' => InviteCode::STATUS_USED
-        ]);
-        $query->leftjoin($User->getTable()." as user", "user.invite_code", '=', "invite.invite_code");
+        $me = $User->where('id', $userId)->first(['id', 'phone', 'invite_code', 'grade', 'path'])->toArray();
+        if ($me['grade'] === 3) {
+            $query = $User->from($User->getTable()." as user")->where([
+                ['path', 'like', "$userId:%"],
+                ['grade', '<>', 3]
+            ]);
+        } else {
+            $query = $User->from($User->getTable()." as user")->where('path', 'like', $me['path']."$userId:%");
+        }
         $query->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id");
-        $query->select(["user.id", "user.phone", "user.reg_time", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"]);
+        $query->select(["user.id", "user.phone", "user.reg_time", "invite_code", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"]);
 
         // 查找关键字.
         $query->where(function($query) use($keyword){
@@ -255,15 +277,19 @@ class UserService{
 
         // 符合条件的推客.
         $users = $query->get()->toArray();
-        $remarks = new FriendRemark();
+
         foreach ($users as &$user){
             $user['type'] = 1;
             $user['type_desc'] = "推客";
             $user['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $user['id']])->pluck('remark')->first();
+            $user['master'] = $InviteCode->from($InviteCode->getTable()." as invite")
+                ->where('invite.invite_code', $user['invite_code'])
+                ->leftjoin($User->getTable()." as user", "user.id", '=', "invite.user_id")
+                ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")->first(['user.id', 'user.phone', 'userinfo.actual_name']);
         }
 
         //我使用的邀请码
-        $inviteCode = $User->where("id", $userId)->pluck('invite_code')->first();
+        $inviteCode = $me['invite_code'];
         if($inviteCode){
             //师傅的用户id
             $masterUserId = $InviteCode->where('invite_code', $inviteCode)->pluck('user_id')->first();
@@ -271,7 +297,7 @@ class UserService{
                 // 匹配师傅关键字.
                 $masterUser = $User->from($User->getTable()." as user")->where("user.id", $masterUserId)
                     ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")
-                    ->select(["user.id", "user.phone", "user.reg_time", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"])
+                    ->select(["user.id", "user.phone", "user.reg_time", "invite_code", "userinfo.actual_name", "userinfo.wechat_id", "userinfo.taobao_id"])
                     ->where(function($query) use($keyword){
                         $query->where('user.phone', 'like', "%$keyword%")
                             ->orwhere('userinfo.wechat_id', 'like', "%$keyword%");
@@ -280,9 +306,21 @@ class UserService{
                     $masterUser['type'] = 2;
                     $masterUser['type_desc'] = "师傅";
                     $masterUser['remark'] = $remarks->where(['user_id' => $userId, 'friend_user_id' => $masterUserId])->pluck('remark')->first();
+                    $masterUser['master'] = $InviteCode->from($InviteCode->getTable()." as invite")
+                        ->where('invite.invite_code', $masterUser['invite_code'])
+                        ->leftjoin($User->getTable()." as user", "user.id", '=', "invite.user_id")
+                        ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")->first(['user.id', 'user.phone', 'userinfo.actual_name']);
                     array_push($users, $masterUser);
                 }
             }
+        }
+
+        // 更改数据格式.
+        foreach ($users as $k=>$v) {
+            $users[$k]['master_id'] = $v['master']['id'];
+            $users[$k]['master_phone'] = $v['master']['phone'];
+            $users[$k]['master_actual_name'] = $v['master']['actual_name'];
+            unset($users[$k]['master']);
         }
 
         return $users;

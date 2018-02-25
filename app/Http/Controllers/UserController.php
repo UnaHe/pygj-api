@@ -233,6 +233,12 @@ class UserController extends Controller
         $startTime = $request->input('start_time');
         $endTime = $request->input('end_time');
 
+        // 如果是从朋友列表过来的请求.
+        $member_id = $request->input('member_id');
+        if ($member_id) {
+            $userId = $member_id;
+        }
+
         try{
             $data = (new UserService())->incomeList($userId, $type, $startTime, $endTime);
         }catch (\Exception $e){
