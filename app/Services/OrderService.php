@@ -942,7 +942,7 @@ class OrderService{
 
                     $isUnused = $unusedCodeNum - $orderNum;
                     if($isUnused < 0){
-                        throw new \LogicException(Order::$order_subtype[$orderSubtype].'剩余'.$unusedCodeNum.'个,不足订单需求'.$orderNum.'个,请先前往申请');
+                        throw new \LogicException(Order::$order_subtype[$orderSubtype].'剩余可派发'.$unusedCodeNum.'个,不足订单需求'.$orderNum.'个,请先前往申请');
                     }
 
                     // 获取订单对应数量类型的邀请码.

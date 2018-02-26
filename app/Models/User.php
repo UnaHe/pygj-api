@@ -52,7 +52,7 @@ class User extends Authenticatable
      */
     public function UserInfo()
     {
-        return $this->hasOne('App\Models\UserInfo', 'user_id', 'id')->select('id', 'user_id', 'actual_name', 'wechat_id', 'taobao_id', 'alipay_id');
+        return $this->hasOne('App\Models\UserInfo', 'user_id', 'id')->select('id', 'user_id', 'actual_name', 'wechat_id', 'taobao_id', 'id_card', 'alipay_id');
     }
 
     /**

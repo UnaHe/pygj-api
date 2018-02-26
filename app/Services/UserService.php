@@ -204,6 +204,7 @@ class UserService{
         $user['actual_name'] = $user['user_info']['actual_name'];
         $user['wechat_id'] = $user['user_info']['wechat_id'];
         $user['taobao_id'] = $user['user_info']['taobao_id'];
+        $user['id_card'] = $user['user_info']['id_card'];
         $user['alipay_id'] = $user['user_info']['alipay_id'];
         unset($user['user_grade']);
         unset($user['user_info']);
