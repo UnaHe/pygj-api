@@ -412,7 +412,7 @@ class UserService{
      */
     public function recruit($userId, $page = 1, $startTime = '', $endTime = ''){
         $User = new User();
-        $Order = new Order();
+        $InviteCode = new InviteCode();
 
         $me = $User->where('id', $userId)->with('UserInfo')->first(['id', 'phone', 'grade', 'path'])->toArray();
         if ($me['grade'] === 3) {
@@ -438,35 +438,37 @@ class UserService{
             $startTime = $startTime.' 00:00:00';
             $endTime = $endTime.' 23:59:59';
             // 时间段推客招募.
-            $member = $Order->whereIn('target_user_id', $usersId)->where([
-                ['type', '<=', 2],
-                ['status', 100],
-                ['created_at', '>=', $startTime],
-                ['created_at', '<=', $endTime]
-            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
+            $member = $InviteCode->whereIn('user_id', $usersId)->where([
+                'status' => InviteCode::STATUS_USED,
+                ['update_time', '>=', $startTime],
+                ['update_time', '<=', $endTime]
+            ])->select(DB::raw('count(user_id) as number, user_id, effective_days, code_type, date'))->groupBy(['user_id', 'effective_days', 'code_type', 'date'])->orderBy('date', 'desc');
         }else if(!$startTime && !$endTime) {
             // 推客招募.
-            $member = $Order->whereIn('target_user_id', $usersId)->where([
-                ['type', '<=', 2],
-                ['status', 100],
-            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
+            $member = $InviteCode->whereIn('user_id', $usersId)->where([
+                'status' => InviteCode::STATUS_USED
+            ])->select(DB::raw('count(user_id) as number, user_id, effective_days, code_type, date'))->groupBy(['user_id', 'effective_days', 'code_type', 'date'])->orderBy('date', 'desc');
         }else{
             // 初始化时间.
             $endTime = $startTime.' 23:59:59';
             $startTime = $startTime.' 00:00:00';
             // 单天推客招募.
-            $member = $Order->whereIn('target_user_id', $usersId)->where([
-                ['type', '<=', 2],
-                ['status', 100],
-                ['created_at', '>=', $startTime],
-                ['created_at', '<=', $endTime]
-            ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
+            $member = $InviteCode->whereIn('user_id', $usersId)->where([
+                'status' => InviteCode::STATUS_USED,
+                ['update_time', '>=', $startTime],
+                ['update_time', '<=', $endTime]
+            ])->select(DB::raw('count(user_id) as number, user_id, effective_days, code_type, date'))->groupBy(['user_id', 'effective_days', 'code_type', 'date'])->orderBy('date', 'desc');
         }
         // 分页.
         $member = (new QueryHelper())->pagination($member)->get()->toArray();
 
+        // 邀请码类型.
         foreach ($member as $k => $v) {
-            $member[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
+            if  ($v['code_type'] !== 1) {
+                $member[$k]['code_type'] = Order::$code_type[$v['effective_days']];
+            } else {
+                $member[$k]['code_type'] = Order::$code_type[$v['code_type']];
+            }
         }
 
         // 我的招募.
@@ -478,39 +480,41 @@ class UserService{
                 // 初始化时间.
                 $startTime = $startTime.' 00:00:00';
                 $endTime = $endTime.' 23:59:59';
-                // 我的时间段招募.
-                $data = $Order->where([
-                    ['type', '<=', 2],
-                    ['status', 100],
-                    ['target_user_id', $userId],
-                    ['created_at', '>=', $startTime],
-                    ['created_at', '<=', $endTime]
-                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
+                // 时间段推客招募.
+                $data = $InviteCode->where([
+                    'user_id' => $userId,
+                    'status' => InviteCode::STATUS_USED,
+                    ['update_time', '>=', $startTime],
+                    ['update_time', '<=', $endTime]
+                ])->select(DB::raw('count(user_id) as number, user_id, effective_days, code_type, date'))->groupBy(['user_id', 'effective_days', 'code_type', 'date'])->orderBy('date', 'asc');
             }else if(!$startTime && !$endTime) {
-                // 我的招募.
-                $data = $Order->where([
-                    ['type', '<=', 2],
-                    ['status', 100],
-                    ['target_user_id', $userId]
-                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
+                // 推客招募.
+                $data = $InviteCode->where([
+                    'user_id' => $userId,
+                    'status' => InviteCode::STATUS_USED
+                ])->select(DB::raw('count(user_id) as number, user_id, effective_days, code_type, date'))->groupBy(['user_id', 'effective_days', 'code_type', 'date'])->orderBy('date', 'asc');
             }else{
                 // 初始化时间.
                 $endTime = $startTime.' 23:59:59';
                 $startTime = $startTime.' 00:00:00';
-                // 我的单天招募.
-                $data = $Order->where([
-                    ['type', '<=', 2],
-                    ['status', 100],
-                    ['target_user_id', $userId],
-                    ['created_at', '>=', $startTime],
-                    ['created_at', '<=', $endTime]
-                ])->select(DB::raw('type, subtype, sum(number) as number, target_user_id, date'))->groupBy(['type', 'subtype', 'target_user_id', 'date'])->orderBy('date', 'asc');
+                // 单天推客招募.
+                $data = $InviteCode->where([
+                    'user_id' => $userId,
+                    'status' => InviteCode::STATUS_USED,
+                    ['update_time', '>=', $startTime],
+                    ['update_time', '<=', $endTime]
+                ])->select(DB::raw('count(user_id) as number, user_id, effective_days, code_type, date'))->groupBy(['user_id', 'effective_days', 'code_type', 'date'])->orderBy('date', 'asc');
             }
             // 分页.
             $data = (new QueryHelper())->pagination($data)->get()->toArray();
 
+            // 邀请码类型.
             foreach ($data as $k => $v) {
-                $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
+                if  ($v['code_type'] != 1) {
+                    $data[$k]['code_type'] = Order::$code_type[$v['effective_days']];
+                } else {
+                    $data[$k]['code_type'] = Order::$code_type[$v['code_type']];
+                }
             }
 
             foreach ($data as $k => $v){
@@ -518,9 +522,10 @@ class UserService{
             };
         }
 
+        // 数据分组.
         $result = [];
         foreach($member as $k=>$v){
-            $result[$v['date']][$v['target_user_id']][$v['type']][] = $v;
+            $result[$v['date']][$v['user_id']][] = $v;
         }
 
         // 用户信息.
@@ -536,15 +541,13 @@ class UserService{
         foreach ($result as $k => $v){
             foreach ($v as $ke => $ve){
                 foreach ($ve as $key => $vel){
-                    foreach ($vel as $key1 => $vel1){
-                        $num += $vel1['number'];
-                        $numbers += $vel1['number'];
-                    }
-                    $result[$k][$ke][$key]['num'] = $num;
-                    $num = 0;
-                    $result[$k][$ke][$key]['wechat_id'] = $info[$vel1['target_user_id']]['wechat_id'];
-                    $result[$k][$ke][$key]['phone'] = $info[$vel1['target_user_id']]['phone'];
+                    $num += $vel['number'];
+                    $numbers += $vel['number'];
                 }
+                $result[$k][$ke]['num'] = $num;
+                $num = 0;
+                $result[$k][$ke]['wechat_id'] = $info[$vel['user_id']]['wechat_id'];
+                $result[$k][$ke]['phone'] = $info[$vel['user_id']]['phone'];
             }
         }
         $result['numbers'] = $numbers;
@@ -564,14 +567,22 @@ class UserService{
         $startTime = (new Carbon())->startOfDay()->toDateTimeString();
         $endTime = (new Carbon())->endOfDay()->toDateTimeString();
 
-        $data = Order::where([
-            ['type', '<=', 2],
-            ['target_user_id', $userId],
-            ['created_at', '>=', $startTime],
-            ['created_at', '<=', $endTime]
-        ])->sum('number');
+        $data = InviteCode::where([
+            'user_id' => $userId,
+            'status' => InviteCode::STATUS_USED
+        ])->select('invite_code')->get();
 
-        return ['number' => $data];
+        $codes = [];
+        foreach ($data as $k=>$v) {
+            $codes[] = $v['invite_code'];
+        }
+
+        $count = User::whereIn('invite_code', $codes)->where([
+            ['reg_time', '>=', $startTime],
+            ['reg_time', '<=', $endTime]
+        ])->count();
+
+        return ['number' => $count];
     }
 
     /**

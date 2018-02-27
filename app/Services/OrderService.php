@@ -8,6 +8,7 @@
 namespace App\Services;
 
 use App\Helpers\QueryHelper;
+use App\Models\PayInfo;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\OrderProcess;
@@ -1064,7 +1065,7 @@ class OrderService{
     }
 
     /**
-     * 半货半款收货
+     * 确认收货
      * @param $userId
      * @param $inviteCode
      * @return mixed
@@ -1112,6 +1113,32 @@ class OrderService{
             $error = $e instanceof \LogicException ? $e->getMessage() : '确认失败';
             throw new \Exception($error);
         }
+    }
+
+    /**
+     * 获取支付信息
+     * @param $userId
+     * @return array
+     */
+    public function getPayInfo($userId){
+        $User = new User();
+
+        // 查询用户信息.
+        $userInfo = $User->where("id", $userId)->first(['id', 'phone', 'grade', 'path'])->toArray();
+
+        $userGrade = $userInfo['grade'] ? : 1;
+
+        if ($userGrade == 3) {
+            // 获取公司支付信息.
+            $pay = PayInfo::where('character', 'admin')->pluck('pay')->first();
+        } else {
+            // 获取父级支付信息.
+            $masterId = explode(':', $userInfo['path'])[0];
+            $masterUser = $User->where("id", $masterId)->with('UserInfo')->first(['id', 'phone', 'grade'])->toArray();
+            $pay = $masterUser['user_info']['alipay_id'] ? : $masterUser['phone'];
+        }
+
+        return ['pay' => $pay];
     }
 
 }

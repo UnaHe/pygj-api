@@ -323,4 +323,21 @@ class OrderController extends Controller
         return $this->ajaxSuccess();
     }
 
+    /**
+     * 获取支付信息
+     * @param Request $request
+     * @return static
+     */
+    public function getPayInfo(Request $request){
+        $userId = $request->user()->id;
+
+        try{
+            $data = (new OrderService())->getPayInfo($userId);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
+    }
+
 }
