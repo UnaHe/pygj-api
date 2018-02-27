@@ -10,6 +10,7 @@ namespace App\Services;
 use App\Helpers\CacheHelper;
 use App\Helpers\QueryHelper;
 use App\Models\InviteCode;
+use App\Models\PayInfo;
 use App\Models\User;
 use App\Models\UserInfo;
 use App\Models\UserLevelConfig;
@@ -195,17 +196,32 @@ class UserService{
      * @throws \Exception
      */
     public function getUserInfo($userId){
+        $User = new User();
+
         // 查询用户.
-        $user = User::where("id", $userId)->with('UserInfo')->with('UserGrade')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
+        $user = $User->where("id", $userId)->with('UserInfo')->with('UserGrade')->first(['id', 'phone', 'grade', 'expiry_time', 'path'])->toArray();
         if(!$user){
             throw new \LogicException("用户不存在");
         }
+        $userGrade = $user['grade'] ? : 1;
+
+        if ($userGrade == 3) {
+            // 获取公司支付信息.
+            $pay = PayInfo::where('character', 'admin')->pluck('pay')->first();
+        } else {
+            // 获取父级支付信息.
+            $masterId = explode(':', $user['path'])[0];
+            $masterUser = $User->where("id", $masterId)->with('UserInfo')->first(['id', 'phone', 'grade'])->toArray();
+            $pay = $masterUser['user_info']['alipay_id'] ? : $masterUser['phone'];
+        }
+
         $user['upgrade'] = $user['user_grade']['upgrade_invitecode_num'];
         $user['actual_name'] = $user['user_info']['actual_name'];
         $user['wechat_id'] = $user['user_info']['wechat_id'];
         $user['taobao_id'] = $user['user_info']['taobao_id'];
         $user['id_card'] = $user['user_info']['id_card'];
         $user['alipay_id'] = $user['user_info']['alipay_id'];
+        $user['pay'] = $pay;
         unset($user['user_grade']);
         unset($user['user_info']);
 
