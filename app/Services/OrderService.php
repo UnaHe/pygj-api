@@ -898,14 +898,15 @@ class OrderService{
                 throw new \LogicException('记录不存在');
             }
 
+            $orderType = $orderInfo['type'];
+            $orderSubtype = $orderInfo['subtype'];
+            $orderNum = $orderInfo['number'];
+            $targetUserId = $orderInfo['target_user_id'];
+            $orderUserId = $orderInfo['user_id'];
+            $orderUserPhone = $orderInfo['user_phone'];
+
             // 批准申请邀请码订单.
             if($types == 100){
-                $orderType = $orderInfo['type'];
-                $orderSubtype = $orderInfo['subtype'];
-                $orderNum = $orderInfo['number'];
-                $targetUserId = $orderInfo['target_user_id'];
-                $orderUserId = $orderInfo['user_id'];
-                $orderUserPhone = $orderInfo['user_phone'];
                 $InviteCode = new InviteCode();
 
                 if($orderType == 1){
