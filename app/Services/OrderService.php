@@ -871,6 +871,7 @@ class OrderService{
                 $data[$k]['remark'] = $OrderProcess->where('order_id', $v['id'])->orderBy('created_at', 'desc')->pluck('remark')->first();
             }
             $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[99];
+            $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
         }
 
         return $data;
