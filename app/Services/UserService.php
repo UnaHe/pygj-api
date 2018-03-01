@@ -211,7 +211,11 @@ class UserService{
         } else {
             // 获取父级支付信息.
             $masterId = explode(':', $user['path'])[0];
-            $masterUser = $User->where("id", $masterId)->with('UserInfo')->first(['id', 'phone', 'grade'])->toArray();
+            $masterUser = $User->where("id", $masterId)->with('UserInfo')->first(['id', 'phone', 'grade']);
+            if(!$masterUser){
+                throw new \LogicException("用户资料有误,请联系管理员");
+            }
+            $masterUser = $masterUser->toArray();
             $pay = $masterUser['user_info']['alipay_id'] ? : $masterUser['phone'];
         }
 
