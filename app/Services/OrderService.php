@@ -1143,4 +1143,60 @@ class OrderService{
         return ['pay' => $pay];
     }
 
+    /**
+     * 提现订单数量
+     * @param $userId
+     * @return array
+     */
+    public function withdrawalsNumber($userId){
+        $Order = new Order();
+
+        $not = $Order->where([
+            ['type', Order::ORDER_EXTRACT],
+            ['to_user_id', $userId],
+            ['status', 1]
+        ])->count();
+
+        $already = $Order->where([
+            ['type', Order::ORDER_EXTRACT],
+            ['to_user_id', $userId],
+            ['status', '<>', 1]
+        ])->count();
+
+        $data = [
+            'not' => $not,
+            'already' => $already
+        ];
+
+        return $data;
+    }
+
+    /**
+     * 提现订单数量
+     * @param $userId
+     * @return array
+     */
+    public function orderNum($userId){
+        // 记录类型.
+        $type = [Order::ORDER_APPLY, Order::ORDER_RENEWFEE, Order::ORDER_INVITE];
+        $Order = new Order();
+
+        $not = $Order->whereIn('type', $type)->where([
+            ['to_user_id', $userId],
+            ['status', 1]
+        ])->count();
+
+        $already = $Order->whereIn('type', $type)->where([
+            ['to_user_id', $userId],
+            ['status', '<>', 1]
+        ])->count();
+
+        $data = [
+            'not' => $not,
+            'already' => $already
+        ];
+
+        return $data;
+    }
+
 }

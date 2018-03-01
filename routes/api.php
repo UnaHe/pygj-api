@@ -195,6 +195,16 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
          */
         Route::get('/getPayInfo', "OrderController@getPayInfo");
 
+        /**
+         * 提现订单数量
+         */
+        Route::get('/withdrawals/withdrawalsNumber', "OrderController@withdrawalsNumber");
+
+        /**
+         * 订单数量
+         */
+        Route::get('/order/orderNum', "OrderController@orderNum");
+
     });
 
     /**

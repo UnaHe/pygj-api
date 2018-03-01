@@ -340,4 +340,38 @@ class OrderController extends Controller
         return $this->ajaxSuccess($data);
     }
 
+    /**
+     * 提现订单数量
+     * @param Request $request
+     * @return static
+     */
+    public function withdrawalsNumber(Request $request){
+        $userId = $request->user()->id;
+
+        try{
+            $data = (new OrderService())->withdrawalsNumber($userId);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
+    }
+
+    /**
+     * 订单数量
+     * @param Request $request
+     * @return static
+     */
+    public function orderNum(Request $request){
+        $userId = $request->user()->id;
+
+        try{
+            $data = (new OrderService())->orderNum($userId);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
+    }
+
 }
