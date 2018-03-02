@@ -191,6 +191,11 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::post('/order/ordersConfirmReceiving', "OrderController@ordersConfirmReceiving");
 
         /**
+         * 	半货半款收货数量
+         */
+        Route::get('/order/ordersReceivingNum', "OrderController@ordersReceivingNum");
+
+        /**
          * 获取支付信息
          */
         Route::get('/getPayInfo', "OrderController@getPayInfo");

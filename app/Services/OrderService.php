@@ -1199,4 +1199,35 @@ class OrderService{
         return $data;
     }
 
+    /**
+     * 半货半款收货数量
+     * @param $userId
+     * @param $orderId
+     * @return array
+     */
+    public function ordersReceivingNum($userId ,$orderId){
+        $orderProcess = OrderProcess::where([
+            'order_id' => $orderId,
+            'biz_user_id' => $userId,
+            'biz_rear_status' => 100,
+        ])->first();
+
+        if(!$orderProcess){
+            throw new \LogicException('记录不存在');
+        }
+
+        $codes = explode(',', $orderProcess['remark']);
+
+        $total = count($codes);
+
+        $num = InviteCode::whereIn('invite_code', $codes)->where('is_receiving', 1)->count();
+
+        $data = [
+            'total' => $total,
+            'num' => $num
+        ];
+
+        return $data;
+    }
+
 }

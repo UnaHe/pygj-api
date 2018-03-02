@@ -374,4 +374,22 @@ class OrderController extends Controller
         return $this->ajaxSuccess($data);
     }
 
+    /**
+     * 半货半款收货数量
+     * @param Request $request
+     * @return static
+     */
+    public function ordersReceivingNum(Request $request){
+        $userId = $request->user()->id;
+        $orderId = $request->input('order_id');
+
+        try{
+            $data = (new OrderService())->ordersReceivingNum($userId, $orderId);
+        }catch (\Exception $e){
+            return $this->ajaxError($e->getMessage());
+        }
+
+        return $this->ajaxSuccess($data);
+    }
+
 }
