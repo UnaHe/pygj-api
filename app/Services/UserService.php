@@ -117,7 +117,7 @@ class UserService{
             if($inviteCode){
                 //师傅的用户id
                 $masterUserId = $InviteCode->where('invite_code', $inviteCode)->pluck('user_id')->first();
-                if($masterUserId){
+                if($masterUserId != -1){
                     $masterUser = $User->where('id', $masterUserId)->with('UserInfo')->first(['id', 'phone', 'reg_time', 'invite_code'])->toArray();
                     if($masterUser){
                         $masterUser['actual_name'] = $masterUser['user_info']['actual_name'];
@@ -318,7 +318,7 @@ class UserService{
         if($inviteCode){
             //师傅的用户id
             $masterUserId = $InviteCode->where('invite_code', $inviteCode)->pluck('user_id')->first();
-            if($masterUserId){
+            if($masterUserId != -1){
                 // 匹配师傅关键字.
                 $masterUser = $User->from($User->getTable()." as user")->where("user.id", $masterUserId)
                     ->leftjoin($UserInfo->getTable()." as userinfo", "userinfo.user_id", '=', "user.id")
