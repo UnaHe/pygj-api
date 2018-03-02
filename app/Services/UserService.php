@@ -211,12 +211,16 @@ class UserService{
         } else {
             // 获取父级支付信息.
             $masterId = explode(':', $user['path'])[0];
-            $masterUser = $User->where("id", $masterId)->with('UserInfo')->first(['id', 'phone', 'grade']);
-            if(!$masterUser){
-                throw new \LogicException("用户资料有误,请联系管理员");
+            if ($masterId == -1) {
+                $pay = 0;
+            } else {
+                $masterUser = $User->where("id", $masterId)->with('UserInfo')->first(['id', 'phone', 'grade']);
+                if(!$masterUser){
+                    throw new \LogicException("用户资料有误,请联系管理员");
+                }
+                $masterUser = $masterUser->toArray();
+                $pay = $masterUser['user_info']['alipay_id'] ? : $masterUser['phone'];
             }
-            $masterUser = $masterUser->toArray();
-            $pay = $masterUser['user_info']['alipay_id'] ? : $masterUser['phone'];
         }
 
         $user['upgrade'] = $user['user_grade']['upgrade_invitecode_num'];
