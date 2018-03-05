@@ -306,4 +306,13 @@ class UserController extends Controller
         return $this->ajaxSuccess($data);
     }
 
+    /**
+     * 邀请页面
+     * @param $phone
+     * @return static
+     */
+    public function invitePage(){
+        return view('acceptInvite');
+    }
+
 }

@@ -693,6 +693,7 @@ class OrderService{
                 'date' => date('Y-m-d'),
             ]);
 
+            // 报错一般为用户PATH未完善.
             if(!$res){
                 throw new \LogicException('提交失败');
             }
@@ -1146,22 +1147,65 @@ class OrderService{
     /**
      * 提现订单数量
      * @param $userId
+     * @param $startTime
+     * @param $endTime
      * @return array
      */
-    public function withdrawalsNumber($userId){
+    public function withdrawalsNumber($userId, $startTime ,$endTime){
         $Order = new Order();
 
-        $not = $Order->where([
-            ['type', Order::ORDER_EXTRACT],
-            ['to_user_id', $userId],
-            ['status', 1]
-        ])->count();
+        if($startTime && $endTime){
+            $startTime = $startTime.' 00:00:00';
+            $endTime = $endTime.' 23:59:59';
+            // 查询时间范围数量.
+            $not = $Order->where([
+                ['type', Order::ORDER_EXTRACT],
+                ['to_user_id', $userId],
+                ['status', 1],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->count();
 
-        $already = $Order->where([
-            ['type', Order::ORDER_EXTRACT],
-            ['to_user_id', $userId],
-            ['status', '<>', 1]
-        ])->count();
+            $already = $Order->where([
+                ['type', Order::ORDER_EXTRACT],
+                ['to_user_id', $userId],
+                ['status', '<>', 1],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->count();
+        }else if(!$startTime && !$endTime) {
+            // 查询数量.
+            $not = $Order->where([
+                ['type', Order::ORDER_EXTRACT],
+                ['to_user_id', $userId],
+                ['status', 1]
+            ])->count();
+
+            $already = $Order->where([
+                ['type', Order::ORDER_EXTRACT],
+                ['to_user_id', $userId],
+                ['status', '<>', 1]
+            ])->count();
+        }else{
+            $endTime = $startTime.' 23:59:59';
+            $startTime = $startTime.' 00:00:00';
+            // 查询单天数量.
+            $not = $Order->where([
+                ['type', Order::ORDER_EXTRACT],
+                ['to_user_id', $userId],
+                ['status', 1],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->count();
+
+            $already = $Order->where([
+                ['type', Order::ORDER_EXTRACT],
+                ['to_user_id', $userId],
+                ['status', '<>', 1],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->count();
+        }
 
         $data = [
             'not' => $not,
@@ -1172,24 +1216,63 @@ class OrderService{
     }
 
     /**
-     * 提现订单数量
+     * 订单数量
      * @param $userId
+     * @param $startTime
+     * @param $endTime
      * @return array
      */
-    public function orderNum($userId){
+    public function orderNum($userId, $startTime ,$endTime){
         // 记录类型.
         $type = [Order::ORDER_APPLY, Order::ORDER_RENEWFEE, Order::ORDER_INVITE];
         $Order = new Order();
 
-        $not = $Order->whereIn('type', $type)->where([
-            ['to_user_id', $userId],
-            ['status', 1]
-        ])->count();
+        if($startTime && $endTime){
+            $startTime = $startTime.' 00:00:00';
+            $endTime = $endTime.' 23:59:59';
+            // 查询时间范围数量.
+            $not = $Order->whereIn('type', $type)->where([
+                ['to_user_id', $userId],
+                ['status', 1],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->count();
 
-        $already = $Order->whereIn('type', $type)->where([
-            ['to_user_id', $userId],
-            ['status', '<>', 1]
-        ])->count();
+            $already = $Order->whereIn('type', $type)->where([
+                ['to_user_id', $userId],
+                ['status', '<>', 1],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->count();
+        }else if(!$startTime && !$endTime) {
+            // 查询数量.
+            $not = $Order->whereIn('type', $type)->where([
+                ['to_user_id', $userId],
+                ['status', 1]
+            ])->count();
+
+            $already = $Order->whereIn('type', $type)->where([
+                ['to_user_id', $userId],
+                ['status', '<>', 1]
+            ])->count();
+        }else{
+            $endTime = $startTime.' 23:59:59';
+            $startTime = $startTime.' 00:00:00';
+            // 查询单天数量.
+            $not = $Order->whereIn('type', $type)->where([
+                ['to_user_id', $userId],
+                ['status', 1],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->count();
+
+            $already = $Order->whereIn('type', $type)->where([
+                ['to_user_id', $userId],
+                ['status', '<>', 1],
+                ['created_at', '>=', $startTime],
+                ['created_at', '<=', $endTime]
+            ])->count();
+        }
 
         $data = [
             'not' => $not,

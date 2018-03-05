@@ -347,9 +347,11 @@ class OrderController extends Controller
      */
     public function withdrawalsNumber(Request $request){
         $userId = $request->user()->id;
+        $startTime = $request->input('start_time');
+        $endTime = $request->input('end_time');
 
         try{
-            $data = (new OrderService())->withdrawalsNumber($userId);
+            $data = (new OrderService())->withdrawalsNumber($userId, $startTime ,$endTime);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }
@@ -364,9 +366,11 @@ class OrderController extends Controller
      */
     public function orderNum(Request $request){
         $userId = $request->user()->id;
+        $startTime = $request->input('start_time');
+        $endTime = $request->input('end_time');
 
         try{
-            $data = (new OrderService())->orderNum($userId);
+            $data = (new OrderService())->orderNum($userId, $startTime ,$endTime);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }
