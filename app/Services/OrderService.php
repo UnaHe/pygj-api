@@ -801,7 +801,7 @@ class OrderService{
                 'created_at' => date('Y-m-d H:i:s')
             ];
 
-            // 批准提现申请.
+            // 审批提现申请.
             DB::beginTransaction();
             $res = $orderInfo->update(['status' => $types]);
 
@@ -832,31 +832,28 @@ class OrderService{
         $type = [Order::ORDER_APPLY, Order::ORDER_RENEWFEE, Order::ORDER_INVITE];
 
         // 记录状态.
-        $compare = ($status == 1) ? '=' : '<>';
+        $compare = ($status == 1) ? [1, 99] : [-1, 100];
 
         if($startTime && $endTime){
             $startTime = $startTime.' 00:00:00';
             $endTime = $endTime.' 23:59:59';
             // 查询时间范围订单.
-            $data = Order::whereIn('type', $type)->where([
+            $data = Order::whereIn('type', $type)->whereIn('status', $compare)->where([
                 ['to_user_id', $userId],
-                ['status', $compare, 1],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
             ])->select(['id', 'type', 'subtype', 'number', 'target_user_id', 'user_name', 'user_phone', 'unit_price', 'total_price', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
         }else if(!$startTime && !$endTime) {
             // 查询订单.
-            $data = Order::whereIn('type', $type)->where([
-                ['to_user_id', $userId],
-                ['status', $compare, 1]
+            $data = Order::whereIn('type', $type)->whereIn('status', $compare)->where([
+                ['to_user_id', $userId]
             ])->select(['id', 'type', 'subtype', 'number', 'target_user_id', 'user_name', 'user_phone', 'unit_price', 'total_price', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
         }else{
             $endTime = $startTime.' 23:59:59';
             $startTime = $startTime.' 00:00:00';
             // 查询单天订单.
-            $data = Order::whereIn('type', $type)->where([
+            $data = Order::whereIn('type', $type)->whereIn('status', $compare)->where([
                 ['to_user_id', $userId],
-                ['status', $compare, 1],
                 ['created_at', '>=', $startTime],
                 ['created_at', '<=', $endTime]
             ])->select(['id', 'type', 'subtype', 'number', 'target_user_id', 'user_name', 'user_phone', 'unit_price', 'total_price', 'status', 'created_at', 'remark'])->orderBy('created_at', 'desc');
@@ -871,7 +868,7 @@ class OrderService{
             if($v['status'] === -1){
                 $data[$k]['remark'] = $OrderProcess->where('order_id', $v['id'])->orderBy('created_at', 'desc')->pluck('remark')->first();
             }
-            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[99];
+            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[98];
             $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
         }
 
@@ -969,10 +966,13 @@ class OrderService{
             // 查询用户.
             $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
 
+            // 是否为半货半款订单.
+            $type = ($orderSubtype == 16) ? 99 : $types;
+
             // 创建订单审批记录表.
             $actualName = $user['user_info']['actual_name'];
             $bizBeforeStatus = 1;
-            $bizRearStatus = $types;
+            $bizRearStatus = $type;
             $OrderProcessParams = [
                 'order_id' => $orderId,
                 'biz_user_id' => $userId,
@@ -985,7 +985,7 @@ class OrderService{
 
             // 正常邀请码.
             $inviteCodeParams['user_id'] = $targetUserId;
-            // 半货半码.
+            // 半货半款.
             if($orderSubtype == 16){
                 $inviteCodeParams['code_type'] = 1;
             }
@@ -994,10 +994,9 @@ class OrderService{
                 $inviteCodeParams['is_dispatch'] = 1;
             }
 
-
-            // 批准申请.
+            // 审批申请.
             DB::beginTransaction();
-            $orderType = $orderInfo->update(['status' => $types]);
+            $orderType = $orderInfo->update(['status' => $type]);
 
             if($orderType){
                 OrderProcess::create($OrderProcessParams);
@@ -1031,7 +1030,7 @@ class OrderService{
         $orderInfo = Order::where([
             'id' => $orderId,
             'subtype' => 16,
-            'status' => 100,
+            'status' => 99,
             'to_user_id' => $userId,
         ])->first();
 
@@ -1076,10 +1075,13 @@ class OrderService{
      */
     public function ordersConfirmReceiving($userId, $orderId, $inviteCode){
         try{
-            $orderProcess = OrderProcess::where([
+            $InviteCode = new InviteCode();
+            $OrderProcess = new OrderProcess();
+
+            $orderProcess = $OrderProcess->where([
                 'order_id' => $orderId,
                 'biz_user_id' => $userId,
-                'biz_rear_status' => 100,
+                'biz_rear_status' => 99,
                 ['remark', 'like', "%$inviteCode%"]
             ])->first();
 
@@ -1087,8 +1089,14 @@ class OrderService{
                 throw new \LogicException('记录不存在');
             }
 
+            $order = Order::where(['id' => $orderId, 'status' => 100])->first();
+
+            if($order){
+                throw new \LogicException('订单已完成');
+            }
+
             // 确认收货.
-            $inviteCodeInfo = InviteCode::where('invite_code', $inviteCode)->first();
+            $inviteCodeInfo = $InviteCode->where('invite_code', $inviteCode)->first();
 
             // Redis 队列.
             $types = $inviteCodeInfo['effective_days'];
@@ -1108,12 +1116,39 @@ class OrderService{
             $res = $inviteCodeInfo->update(['is_receiving' => 1]);
 
             if(!$res){
-                throw new \LogicException('确认失败');
+                throw new \LogicException('确认收货失败');
             }
 
+            $codes = explode(',', $orderProcess['remark']);
+            $total = count($codes);
+            $num = $InviteCode->whereIn('invite_code', $codes)->where('is_receiving', 1)->count();
+
+            // 如果全部收货完成.
+            if ($total == $num) {
+                // 查询用户.
+                $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
+
+                // 创建订单审批记录表.
+                $actualName = $user['user_info']['actual_name'];
+                $bizBeforeStatus = 1;
+                $bizRearStatus = 100;
+                $OrderProcessParams = [
+                    'order_id' => $orderId,
+                    'biz_user_id' => $userId,
+                    'biz_user_name' => $actualName,
+                    'biz_before_status' => $bizBeforeStatus,
+                    'biz_rear_status' => $bizRearStatus,
+                    'remark' => '',
+                    'created_at' => date('Y-m-d H:i:s')
+                ];
+                Order::where('id', $orderId)->update(['status' => $bizRearStatus]);
+                $OrderProcess->create($OrderProcessParams);
+            }
+
+            // 存入收益统计队列.
             Redis::lpush('manager:queue:complate_order_info', $redisParamsJson);
         }catch (\Exception $e){
-            $error = $e instanceof \LogicException ? $e->getMessage() : '确认失败';
+            $error = $e instanceof \LogicException ? $e->getMessage() : '确认收货失败';
             throw new \Exception($error);
         }
     }
