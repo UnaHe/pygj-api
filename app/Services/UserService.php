@@ -593,20 +593,12 @@ class UserService{
 
         $data = InviteCode::where([
             'user_id' => $userId,
-            'status' => InviteCode::STATUS_USED
-        ])->select('invite_code')->get();
-
-        $codes = [];
-        foreach ($data as $k=>$v) {
-            $codes[] = $v['invite_code'];
-        }
-
-        $count = User::whereIn('invite_code', $codes)->where([
-            ['reg_time', '>=', $startTime],
-            ['reg_time', '<=', $endTime]
+            'status' => InviteCode::STATUS_USED,
+            ['update_time', '>=', $startTime],
+            ['update_time', '<=', $endTime]
         ])->count();
 
-        return ['number' => $count];
+        return ['number' => $data];
     }
 
     /**

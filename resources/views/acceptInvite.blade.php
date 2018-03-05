@@ -8,7 +8,7 @@
     <meta name="renderer" content="webkit">
     <meta http-equiv="Cache-Control" content="no-siteapp"/>
     <link rel="manifest" href="/acceptInvite/manifest.json">
-    <link rel="shortcut icon" href="/tao.png">
+    <link rel="shortcut icon" href="/acceptInvite/tao.ico">
     <meta http-equiv="x-dns-prefetch-control" content="on">
     <link rel="dns-prefetch" href="//img.alicdn.com/">
     <title>朋友管家</title>
@@ -42,6 +42,6 @@
 <script async
         type="text/javascript">var cnzz_protocol = "https:" == document.location.protocol ? " https://" : " http://";
     document.write(unescape("%3Cspan style='display: none' id='cnzz_stat_icon_1271968689'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "s13.cnzz.com/z_stat.php%3Fid%3D1271968689%26show%3Dpic' type='text/javascript'%3E%3C/script%3E"))</script>
-<script type="text/javascript" src="/acceptInvite/static/js/main.3614023e.js"></script>
+<script type="text/javascript" src="/acceptInvite/static/js/main.10b3ef30.js"></script>
 </body>
 </html>
