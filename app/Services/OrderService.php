@@ -1120,14 +1120,18 @@ class OrderService{
 
     /**
      * 获取支付信息
-     * @param $userId
+     * @param $phone
      * @return array
      */
-    public function getPayInfo($userId){
+    public function getPayInfo($phone){
         $User = new User();
 
         // 查询用户信息.
-        $userInfo = $User->where("id", $userId)->first(['id', 'phone', 'grade', 'path'])->toArray();
+        $userInfo = $User->where("phone", $phone)->first(['id', 'phone', 'grade', 'path']);
+
+        if(!$userInfo){
+            throw new \LogicException('记录不存在');
+        }
 
         $userGrade = $userInfo['grade'] ? : 1;
 

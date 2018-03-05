@@ -308,7 +308,6 @@ class UserController extends Controller
 
     /**
      * 邀请页面
-     * @param $phone
      * @return static
      */
     public function invitePage(){

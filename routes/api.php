@@ -196,11 +196,6 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
         Route::get('/order/ordersReceivingNum', "OrderController@ordersReceivingNum");
 
         /**
-         * 获取支付信息
-         */
-        Route::get('/getPayInfo', "OrderController@getPayInfo");
-
-        /**
          * 提现订单数量
          */
         Route::get('/withdrawals/withdrawalsNumber', "OrderController@withdrawalsNumber");
@@ -216,6 +211,11 @@ Route::middleware(\App\Http\Middleware\ApiLog::class)->namespace('App\Http\Contr
      * 邀请订单
      */
     Route::post('/invite/acceptInvite', "OrderController@acceptInvite");
+
+    /**
+     * 获取支付信息
+     */
+    Route::get('/getPayInfo', "OrderController@getPayInfo");
 
 });
 

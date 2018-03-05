@@ -329,10 +329,10 @@ class OrderController extends Controller
      * @return static
      */
     public function getPayInfo(Request $request){
-        $userId = $request->user()->id;
+        $phone = $request->input('phone');
 
         try{
-            $data = (new OrderService())->getPayInfo($userId);
+            $data = (new OrderService())->getPayInfo($phone);
         }catch (\Exception $e){
             return $this->ajaxError($e->getMessage());
         }
