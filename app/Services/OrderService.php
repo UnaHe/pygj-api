@@ -233,7 +233,7 @@ class OrderService{
             $InviteCode = new InviteCode();
 
             // 我的用户信息.
-            $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'invite_code', 'grade']);
+            $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'invite_code', 'grade', 'expiry_time']);
             $userArr = $user->toArray();
             $userOldCode = $userArr['invite_code'];
 
