@@ -401,6 +401,19 @@ class OrderService{
                 'date' => date('Y-m-d'),
             ];
 
+            // Redis 队列.
+            $codeUserId = $isCode['user_id'];
+            $codeType = $isCode['code_type'];
+            $redisParams = [
+                'type' => 4,
+                'code' => $newCode,
+                'uprice' => $unit_price,
+                'userId' => $codeUserId,
+                'effdays' => $newCodeType,
+                'codetype' => $codeType,
+            ];
+            $redisParamsJson = json_encode($redisParams, JSON_FORCE_OBJECT);
+
             // 创建升级订单.
             DB::beginTransaction();
 
@@ -414,12 +427,16 @@ class OrderService{
                 // 更改邀请码状态.
                 $isCode->status = InviteCode::STATUS_USED;
                 $isCode->update_time = date('Y-m-d H:i:s');
+                $isCode->date = date('Y-m-d');
                 $isCode->save();
             } else {
                 DB::rollBack();
                 throw new \LogicException('升级失败');
             }
             DB::commit();
+
+            // 存入收益统计队列.
+            Redis::lpush('manager:queue:complate_order_info', $redisParamsJson);
         }catch (\Exception $e){
             DB::rollBack();
             $error = $e instanceof \LogicException ? $e->getMessage() : '升级失败';
