@@ -774,7 +774,7 @@ class OrderService{
             if($v['status'] === -1){
                 $data[$k]['remark'] = $OrderProcess->where('order_id', $v['id'])->orderBy('created_at', 'desc')->pluck('remark')->first();
             }
-            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[99];
+//            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[99];
         }
 
         return $data;
@@ -887,7 +887,10 @@ class OrderService{
             if($v['status'] === -1){
                 $data[$k]['remark'] = $OrderProcess->where('order_id', $v['id'])->orderBy('created_at', 'desc')->pluck('remark')->first();
             }
-            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[98];
+            if($v['subtype'] === 16){
+                $data[$k]['bhbk'] = $this->ordersReceivingNum($userId, $v['id']);
+            }
+//            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[98];
             $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
         }
 
@@ -1350,7 +1353,7 @@ class OrderService{
         $orderProcess = OrderProcess::where([
             'order_id' => $orderId,
             'biz_user_id' => $userId,
-            'biz_rear_status' => 100,
+            'biz_rear_status' => 99,
         ])->first();
 
         if(!$orderProcess){

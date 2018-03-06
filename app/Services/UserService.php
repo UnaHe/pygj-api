@@ -398,7 +398,7 @@ class UserService{
                 $data[$k]['remark'] = $OrderProcess->where('order_id', $v['id'])->orderBy('created_at', 'desc')->pluck('remark')->first();
             }
             $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];
-            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[98];
+//            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[98];
             $data[$k]['date'] = explode(' ', $v['created_at'])[0];
             $data[$k]['time'] = explode(' ', $v['created_at'])[1];
         }
