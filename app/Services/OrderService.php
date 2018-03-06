@@ -650,9 +650,10 @@ class OrderService{
                 'type' => 1,
                 'user_id' => NUll,
                 'user_phone' => $phone,
+                'status' => -1
             ])->first();
 
-            if($orderInfo){
+            if(!$orderInfo){
                 throw new \LogicException('订单已存在,请等待审核');
             }
 
