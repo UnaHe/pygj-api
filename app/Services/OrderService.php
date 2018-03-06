@@ -986,7 +986,7 @@ class OrderService{
             $user = User::where("id", $userId)->with('UserInfo')->first(['id', 'phone', 'grade', 'expiry_time'])->toArray();
 
             // 是否为半货半款订单.
-            $type = ($orderSubtype == 16) ? 99 : $types;
+            $type = ($orderSubtype == 16) ? (($types == -1) ? -1 : 99) : $types;
 
             // 创建订单审批记录表.
             $actualName = $user['user_info']['actual_name'];
