@@ -645,15 +645,16 @@ class OrderService{
      */
     public function acceptInvite($masterPhone, $phone, $types){
         try{
-            // 同一用户只能存在一个邀请订单.
-            $orderInfo = Order::where([
+            // 同一用户只能存在一个待审或已审邀请订单.
+            $compare = [1, 99, 100];
+
+            $orderInfo = Order::whereIn('status', $compare)->where([
                 'type' => 1,
                 'user_id' => NUll,
                 'user_phone' => $phone,
-                'status' => -1
             ])->first();
 
-            if(!$orderInfo){
+            if($orderInfo){
                 throw new \LogicException('订单已存在,请等待审核');
             }
 
