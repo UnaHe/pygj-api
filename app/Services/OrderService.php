@@ -1123,6 +1123,10 @@ class OrderService{
             // 确认收货.
             $inviteCodeInfo = $InviteCode->where('invite_code', $inviteCode)->first();
 
+            if($inviteCodeInfo['status'] != 2){
+                throw new \LogicException('码未激活');
+            }
+
             // Redis 队列.
             $types = $inviteCodeInfo['effective_days'];
             $unit_price = CodePrice::where('duration', $types)->pluck('code_price')->first();
