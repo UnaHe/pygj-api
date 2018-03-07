@@ -13,7 +13,7 @@ namespace Psy\Test;
 
 use Psy\Autoloader;
 
-class AutoloaderTest extends \PHPUnit\Framework\TestCase
+class AutoloaderTest extends \PHPUnit_Framework_TestCase
 {
     public function testRegister()
     {

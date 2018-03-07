@@ -63,7 +63,7 @@ EOF;
     private $testCase;
 
     /**
-     * @var AbstractPhpProcess|\PHPUnit\Framework\MockObject\MockObject
+     * @var AbstractPhpProcess|\PHPUnit_Framework_MockObject_MockObject
      */
     private $phpProcess;
 

@@ -220,14 +220,16 @@ class Configuration
     {
         $addUncoveredFilesFromWhitelist     = true;
         $processUncoveredFilesFromWhitelist = false;
-        $includeDirectory                   = [];
-        $includeFile                        = [];
-        $excludeDirectory                   = [];
-        $excludeFile                        = [];
 
         $tmp = $this->xpath->query('filter/whitelist');
 
-        if ($tmp->length === 1) {
+        if ($tmp->length == 0) {
+            return [
+                'whitelist' => []
+            ];
+        }
+
+        if ($tmp->length == 1) {
             if ($tmp->item(0)->hasAttribute('addUncoveredFilesFromWhitelist')) {
                 $addUncoveredFilesFromWhitelist = $this->getBoolean(
                     (string) $tmp->item(0)->getAttribute(
@@ -245,22 +247,6 @@ class Configuration
                     false
                 );
             }
-
-            $includeDirectory = $this->readFilterDirectories(
-                'filter/whitelist/directory'
-            );
-
-            $includeFile = $this->readFilterFiles(
-                'filter/whitelist/file'
-            );
-
-            $excludeDirectory = $this->readFilterDirectories(
-                'filter/whitelist/exclude/directory'
-            );
-
-            $excludeFile = $this->readFilterFiles(
-                'filter/whitelist/exclude/file'
-            );
         }
 
         return [
@@ -268,12 +254,20 @@ class Configuration
                 'addUncoveredFilesFromWhitelist'     => $addUncoveredFilesFromWhitelist,
                 'processUncoveredFilesFromWhitelist' => $processUncoveredFilesFromWhitelist,
                 'include'                            => [
-                    'directory' => $includeDirectory,
-                    'file'      => $includeFile
+                    'directory' => $this->readFilterDirectories(
+                        'filter/whitelist/directory'
+                    ),
+                    'file' => $this->readFilterFiles(
+                        'filter/whitelist/file'
+                    )
                 ],
                 'exclude' => [
-                    'directory' => $excludeDirectory,
-                    'file'      => $excludeFile
+                    'directory' => $this->readFilterDirectories(
+                        'filter/whitelist/exclude/directory'
+                    ),
+                    'file' => $this->readFilterFiles(
+                        'filter/whitelist/exclude/file'
+                    )
                 ]
             ]
         ];
@@ -538,17 +532,14 @@ class Configuration
             switch ($array) {
                 case 'var':
                     $target = &$GLOBALS;
-
                     break;
 
                 case 'server':
                     $target = &$_SERVER;
-
                     break;
 
                 default:
                     $target = &$GLOBALS['_' . \strtoupper($array)];
-
                     break;
             }
 
@@ -561,7 +552,7 @@ class Configuration
             $value = $data['value'];
             $force = isset($data['force']) ? $data['force'] : false;
 
-            if ($force || false === \getenv($name)) {
+            if (false === \getenv($name)) {
                 \putenv("{$name}={$value}");
             }
 

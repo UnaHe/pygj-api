@@ -23,7 +23,10 @@ class MemoryDataCollector extends DataCollector implements LateDataCollectorInte
 {
     public function __construct()
     {
-        $this->reset();
+        $this->data = array(
+            'memory' => 0,
+            'memory_limit' => $this->convertToBytes(ini_get('memory_limit')),
+        );
     }
 
     /**
@@ -32,17 +35,6 @@ class MemoryDataCollector extends DataCollector implements LateDataCollectorInte
     public function collect(Request $request, Response $response, \Exception $exception = null)
     {
         $this->updateMemoryUsage();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function reset()
-    {
-        $this->data = array(
-            'memory' => 0,
-            'memory_limit' => $this->convertToBytes(ini_get('memory_limit')),
-        );
     }
 
     /**

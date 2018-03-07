@@ -43,6 +43,8 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
 
     /**
      * Sets the Kernel associated with this Request.
+     *
+     * @param KernelInterface $kernel A KernelInterface instance
      */
     public function setKernel(KernelInterface $kernel = null)
     {
@@ -91,14 +93,6 @@ class ConfigDataCollector extends DataCollector implements LateDataCollectorInte
             $this->data['php_version'] = $matches[1];
             $this->data['php_version_extra'] = $matches[2];
         }
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function reset()
-    {
-        $this->data = array();
     }
 
     public function lateCollect()

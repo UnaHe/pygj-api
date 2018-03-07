@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 class DatabaseNotificationCollection extends Collection
 {
     /**
-     * Mark all notifications as read.
+     * Mark all notification as read.
      *
      * @return void
      */

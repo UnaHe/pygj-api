@@ -45,8 +45,6 @@ trait SoftDeletes
     protected function performDeleteOnModel()
     {
         if ($this->forceDeleting) {
-            $this->exists = false;
-
             return $this->newQueryWithoutScopes()->where($this->getKeyName(), $this->getKey())->forceDelete();
         }
 
@@ -164,6 +162,6 @@ trait SoftDeletes
      */
     public function getQualifiedDeletedAtColumn()
     {
-        return $this->qualifyColumn($this->getDeletedAtColumn());
+        return $this->getTable().'.'.$this->getDeletedAtColumn();
     }
 }

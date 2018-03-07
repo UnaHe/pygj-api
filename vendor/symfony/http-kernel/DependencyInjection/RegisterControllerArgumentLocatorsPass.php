@@ -53,13 +53,11 @@ class RegisterControllerArgumentLocatorsPass implements CompilerPassInterface
             $def->setPublic(true);
             $class = $def->getClass();
             $autowire = $def->isAutowired();
-            $bindings = $def->getBindings();
 
             // resolve service class, taking parent definitions into account
-            while ($def instanceof ChildDefinition) {
+            while (!$class && $def instanceof ChildDefinition) {
                 $def = $container->findDefinition($def->getParent());
-                $class = $class ?: $def->getClass();
-                $bindings = $def->getBindings();
+                $class = $def->getClass();
             }
             $class = $parameterBag->resolveValue($class);
 
@@ -131,19 +129,6 @@ class RegisterControllerArgumentLocatorsPass implements CompilerPassInterface
                         } elseif ($p->allowsNull() && !$p->isOptional()) {
                             $invalidBehavior = ContainerInterface::NULL_ON_INVALID_REFERENCE;
                         }
-                    } elseif (isset($bindings[$bindingName = '$'.$p->name]) || isset($bindings[$bindingName = $type])) {
-                        $binding = $bindings[$bindingName];
-
-                        list($bindingValue, $bindingId) = $binding->getValues();
-
-                        if (!$bindingValue instanceof Reference) {
-                            continue;
-                        }
-
-                        $binding->setValues(array($bindingValue, $bindingId, true));
-                        $args[$p->name] = $bindingValue;
-
-                        continue;
                     } elseif (!$type || !$autowire) {
                         continue;
                     }

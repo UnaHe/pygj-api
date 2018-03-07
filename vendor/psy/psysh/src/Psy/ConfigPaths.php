@@ -136,22 +136,7 @@ class ConfigPaths
     {
         $xdg = new Xdg();
 
-        set_error_handler(array('Psy\Exception\ErrorException', 'throwException'));
-
-        try {
-            // XDG doesn't really work on Windows, sometimes complains about
-            // permissions, sometimes tries to remove non-empty directories.
-            // It's a bit flaky. So we'll give this a shot first...
-            $runtimeDir = $xdg->getRuntimeDir(false);
-        } catch (\Exception $e) {
-            // Well. That didn't work. Fall back to a boring old folder in the
-            // system temp dir.
-            $runtimeDir = sys_get_temp_dir();
-        }
-
-        restore_error_handler();
-
-        return strtr($runtimeDir, '\\', '/') . '/psysh';
+        return $xdg->getRuntimeDir(false) . '/psysh';
     }
 
     private static function getDirNames(array $baseDirs)

@@ -29,13 +29,13 @@ class ClientCredentialsGrant extends AbstractGrant
     ) {
         // Validate request
         $client = $this->validateClient($request);
-        $scopes = $this->validateScopes($this->getRequestParameter('scope', $request, $this->defaultScope));
+        $scopes = $this->validateScopes($this->getRequestParameter('scope', $request));
 
         // Finalize the requested scopes
-        $finalizedScopes = $this->scopeRepository->finalizeScopes($scopes, $this->getIdentifier(), $client);
+        $scopes = $this->scopeRepository->finalizeScopes($scopes, $this->getIdentifier(), $client);
 
         // Issue and persist access token
-        $accessToken = $this->issueAccessToken($accessTokenTTL, $client, null, $finalizedScopes);
+        $accessToken = $this->issueAccessToken($accessTokenTTL, $client, null, $scopes);
 
         // Inject access token into response type
         $responseType->setAccessToken($accessToken);

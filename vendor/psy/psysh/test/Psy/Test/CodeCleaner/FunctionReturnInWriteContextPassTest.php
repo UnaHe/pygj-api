@@ -43,7 +43,6 @@ class FunctionReturnInWriteContextPassTest extends CodeCleanerTestCase
             array('$a->method(& $closure())'),
             array('array(& A::b())'),
             array('f() = 5'),
-            array('unset(h())'),
         );
     }
 

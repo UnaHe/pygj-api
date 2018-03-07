@@ -11,15 +11,14 @@
 
 namespace Symfony\Component\HttpFoundation\Session\Storage\Handler;
 
-@trigger_error(sprintf('The class %s is deprecated since Symfony 3.4 and will be removed in 4.0. Use Symfony\Component\HttpFoundation\Session\Storage\Handler\MemcachedSessionHandler instead.', MemcacheSessionHandler::class), E_USER_DEPRECATED);
-
 /**
  * @author Drak <drak@zikula.org>
- *
- * @deprecated since version 3.4, to be removed in 4.0. Use Symfony\Component\HttpFoundation\Session\Storage\Handler\MemcachedSessionHandler instead.
  */
 class MemcacheSessionHandler implements \SessionHandlerInterface
 {
+    /**
+     * @var \Memcache Memcache driver
+     */
     private $memcache;
 
     /**
@@ -33,8 +32,6 @@ class MemcacheSessionHandler implements \SessionHandlerInterface
     private $prefix;
 
     /**
-     * Constructor.
-     *
      * List of available options:
      *  * prefix: The prefix to use for the memcache keys in order to avoid collision
      *  * expiretime: The time to live in seconds

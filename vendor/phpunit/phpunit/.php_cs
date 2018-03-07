@@ -18,15 +18,7 @@ return PhpCsFixer\Config::create()
                 'align_equals' => true
             ],
             'blank_line_after_namespace' => true,
-            'blank_line_before_statement' => [
-                'statements' => [
-                    'break',
-                    'continue',
-                    'return',
-                    'throw',
-                    'try',
-                ],
-            ],
+            'blank_line_before_return' => true,
             'braces' => true,
             'cast_spaces' => true,
             'concat_space' => ['spacing' => 'one'],
@@ -56,7 +48,6 @@ return PhpCsFixer\Config::create()
             'no_trailing_whitespace' => true,
             'no_unused_imports' => true,
             'no_whitespace_in_blank_line' => true,
-            'ordered_imports' => true,
             'phpdoc_align' => true,
             'phpdoc_indent' => true,
             'phpdoc_no_access' => true,

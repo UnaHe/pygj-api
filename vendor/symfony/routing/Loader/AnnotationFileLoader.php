@@ -27,6 +27,9 @@ class AnnotationFileLoader extends FileLoader
     protected $loader;
 
     /**
+     * @param FileLocatorInterface  $locator A FileLocator instance
+     * @param AnnotationClassLoader $loader  An AnnotationClassLoader instance
+     *
      * @throws \RuntimeException
      */
     public function __construct(FileLocatorInterface $locator, AnnotationClassLoader $loader)

@@ -233,6 +233,9 @@ class RouteCompiler implements RouteCompilerInterface
     /**
      * Determines the longest static prefix possible for a route.
      *
+     * @param Route $route
+     * @param array $tokens
+     *
      * @return string The leading static part of a route's path
      */
     private static function determineStaticPrefix(Route $route, array $tokens)

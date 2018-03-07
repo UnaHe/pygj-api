@@ -20,10 +20,13 @@ use Symfony\Component\HttpKernel\Event\FilterControllerEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 
 /**
+ * RequestDataCollector.
+ *
  * @author Fabien Potencier <fabien@symfony.com>
  */
 class RequestDataCollector extends DataCollector implements EventSubscriberInterface, LateDataCollectorInterface
 {
+    /** @var \SplObjectStorage */
     protected $controllers;
 
     public function __construct()
@@ -128,7 +131,7 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
             unset($this->controllers[$request]);
         }
 
-        if (null !== $session) {
+        if (null !== $session && $session->isStarted()) {
             if ($request->attributes->has('_redirected')) {
                 $this->data['redirect'] = $session->remove('sf_redirect');
             }
@@ -151,12 +154,6 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
     public function lateCollect()
     {
         $this->data = $this->cloneVar($this->data);
-    }
-
-    public function reset()
-    {
-        $this->data = array();
-        $this->controllers = new \SplObjectStorage();
     }
 
     public function getMethod()
@@ -312,7 +309,7 @@ class RequestDataCollector extends DataCollector implements EventSubscriberInter
 
     public function onKernelResponse(FilterResponseEvent $event)
     {
-        if (!$event->isMasterRequest() || !$event->getRequest()->hasSession()) {
+        if (!$event->isMasterRequest() || !$event->getRequest()->hasSession() || !$event->getRequest()->getSession()->isStarted()) {
             return;
         }
 

@@ -24,9 +24,15 @@ class ApplicationDescription
 {
     const GLOBAL_NAMESPACE = '_global';
 
+    /**
+     * @var Application
+     */
     private $application;
+
+    /**
+     * @var null|string
+     */
     private $namespace;
-    private $showHidden;
 
     /**
      * @var array
@@ -42,6 +48,11 @@ class ApplicationDescription
      * @var Command[]
      */
     private $aliases;
+
+    /**
+     * @var bool
+     */
+    private $showHidden;
 
     /**
      * @param Application $application
@@ -124,6 +135,8 @@ class ApplicationDescription
     }
 
     /**
+     * @param array $commands
+     *
      * @return array
      */
     private function sortCommands(array $commands)

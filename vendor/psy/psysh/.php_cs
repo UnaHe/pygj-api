@@ -1,11 +1,8 @@
 <?php
 
-$finder = PhpCsFixer\Finder::create()
-    ->in(__DIR__)
-    ->name('.php_cs')
-    ->name('build-manual')
-    ->name('build-phar')
-    ->exclude('build-vendor');
+use Symfony\CS\Config\Config;
+use Symfony\CS\FixerInterface;
+use Symfony\CS\Fixer\Contrib\HeaderCommentFixer;
 
 $header = <<<EOF
 This file is part of Psy Shell.
@@ -16,17 +13,32 @@ For the full copyright and license information, please view the LICENSE
 file that was distributed with this source code.
 EOF;
 
-return PhpCsFixer\Config::create()
-    ->setRules(array(
-        '@Symfony' => true,
-        'array_syntax' => array('syntax' => 'long'),
-        'binary_operator_spaces' => false,
-        'concat_space' => array('spacing' => 'one'),
-        'header_comment' => array('header' => $header),
-        'increment_style' => array('style' => 'post'),
-        'method_argument_space' => array('keep_multiple_spaces_after_comma' => true),
-        'ordered_imports' => true,
-        'pre_increment' => false,
-        'yoda_style' => false,
+HeaderCommentFixer::setHeader($header);
+
+$config = Config::create()
+    // use symfony level and extra fixers:
+    ->level(FixerInterface::SYMFONY_LEVEL)
+    ->fixers(array(
+        'align_double_arrow',
+        'concat_with_spaces',
+        'header_comment',
+        'long_array_syntax',
+        'ordered_use',
+        'strict',
+        '-concat_without_spaces',
+        '-method_argument_space',
+        '-pre_increment',
+        '-unalign_double_arrow',
+        '-unalign_equals',
+        '-no_empty_comment', // stop removing slashes in the middle of multi-line comments
     ))
-    ->setFinder($finder);
+    ->setUsingLinter(false);
+
+$finder = $config->getFinder()
+    ->in(__DIR__)
+    ->name('.php_cs')
+    ->name('build-manual')
+    ->name('build-phar')
+    ->exclude('build-vendor');
+
+return $config;

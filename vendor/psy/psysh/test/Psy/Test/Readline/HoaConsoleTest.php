@@ -13,7 +13,7 @@ namespace Psy\Test\Readline;
 
 use Psy\Readline\HoaConsole;
 
-class HoaConsoleTest extends \PHPUnit\Framework\TestCase
+class HoaConsoleTest extends \PHPUnit_Framework_TestCase
 {
     public function testHistory()
     {

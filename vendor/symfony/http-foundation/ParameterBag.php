@@ -20,6 +20,8 @@ class ParameterBag implements \IteratorAggregate, \Countable
 {
     /**
      * Parameter storage.
+     *
+     * @var array
      */
     protected $parameters;
 

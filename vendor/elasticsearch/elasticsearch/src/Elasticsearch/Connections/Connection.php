@@ -156,7 +156,7 @@ class Connection implements ConnectionInterface
             'uri'         => $this->getURI($uri, $params),
             'body'        => $body,
             'headers'     => array_merge([
-                'Host'  => [$this->host]
+                'host'  => [$this->host]
             ], $this->headers)
         ];
 
@@ -456,7 +456,7 @@ class Connection implements ConnectionInterface
             ]
         ];
 
-        return $this->performRequest('GET', '/_nodes/', null, null, $options);
+        return $this->performRequest('GET', '/_nodes/_all/clear', null, null, $options);
     }
 
     /**

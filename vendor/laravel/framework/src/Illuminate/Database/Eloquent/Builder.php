@@ -1223,17 +1223,6 @@ class Builder
     }
 
     /**
-     * Qualify the given column name by the model's table.
-     *
-     * @param  string  $column
-     * @return string
-     */
-    public function qualifyColumn($column)
-    {
-        return $this->model->qualifyColumn($column);
-    }
-
-    /**
      * Get the given macro by name.
      *
      * @param  string  $name
@@ -1265,12 +1254,12 @@ class Builder
             return $this->localMacros[$method](...$parameters);
         }
 
-        if (isset(static::$macros[$method])) {
-            if (static::$macros[$method] instanceof Closure) {
-                return call_user_func_array(static::$macros[$method]->bindTo($this, static::class), $parameters);
-            }
+        if (isset(static::$macros[$method]) and static::$macros[$method] instanceof Closure) {
+            return call_user_func_array(static::$macros[$method]->bindTo($this, static::class), $parameters);
+        }
 
-            return call_user_func_array(static::$macros[$method], $parameters);
+        if (isset(static::$macros[$method])) {
+            return call_user_func_array(static::$macros[$method]->bindTo($this, static::class), $parameters);
         }
 
         if (method_exists($this->model, $scope = 'scope'.ucfirst($method))) {

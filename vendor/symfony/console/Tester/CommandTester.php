@@ -31,6 +31,9 @@ class CommandTester
     private $inputs = array();
     private $statusCode;
 
+    /**
+     * @param Command $command A Command instance to test
+     */
     public function __construct(Command $command)
     {
         $this->command = $command;
@@ -132,8 +135,8 @@ class CommandTester
     /**
      * Sets the user inputs.
      *
-     * @param array $inputs An array of strings representing each input
-     *                      passed to the command input stream
+     * @param array an array of strings representing each input
+     *              passed to the command input stream
      *
      * @return CommandTester
      */

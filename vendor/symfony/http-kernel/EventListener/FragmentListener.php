@@ -47,6 +47,8 @@ class FragmentListener implements EventSubscriberInterface
     /**
      * Fixes request attributes when the path is '/_fragment'.
      *
+     * @param GetResponseEvent $event A GetResponseEvent instance
+     *
      * @throws AccessDeniedHttpException if the request does not come from a trusted IP
      */
     public function onKernelRequest(GetResponseEvent $event)

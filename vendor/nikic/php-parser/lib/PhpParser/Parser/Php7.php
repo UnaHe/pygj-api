@@ -1191,21 +1191,15 @@ class Php7 extends \PhpParser\ParserAbstract
     }
 
     protected function reduceRule95() {
-         $this->semValue = new Stmt\Namespace_($this->semStack[$this->stackPos-(3-2)], null, $this->startAttributeStack[$this->stackPos-(3-1)] + $this->endAttributes);
-            $this->semValue->setAttribute('kind', Stmt\Namespace_::KIND_SEMICOLON);
-            $this->checkNamespace($this->semValue);
+         $this->semValue = new Stmt\Namespace_($this->semStack[$this->stackPos-(3-2)], null, $this->startAttributeStack[$this->stackPos-(3-1)] + $this->endAttributes); $this->checkNamespace($this->semValue);
     }
 
     protected function reduceRule96() {
-         $this->semValue = new Stmt\Namespace_($this->semStack[$this->stackPos-(5-2)], $this->semStack[$this->stackPos-(5-4)], $this->startAttributeStack[$this->stackPos-(5-1)] + $this->endAttributes);
-            $this->semValue->setAttribute('kind', Stmt\Namespace_::KIND_BRACED);
-            $this->checkNamespace($this->semValue);
+         $this->semValue = new Stmt\Namespace_($this->semStack[$this->stackPos-(5-2)], $this->semStack[$this->stackPos-(5-4)], $this->startAttributeStack[$this->stackPos-(5-1)] + $this->endAttributes); $this->checkNamespace($this->semValue);
     }
 
     protected function reduceRule97() {
-         $this->semValue = new Stmt\Namespace_(null, $this->semStack[$this->stackPos-(4-3)], $this->startAttributeStack[$this->stackPos-(4-1)] + $this->endAttributes);
-            $this->semValue->setAttribute('kind', Stmt\Namespace_::KIND_BRACED);
-            $this->checkNamespace($this->semValue);
+         $this->semValue = new Stmt\Namespace_(null, $this->semStack[$this->stackPos-(4-3)], $this->startAttributeStack[$this->stackPos-(4-1)] + $this->endAttributes); $this->checkNamespace($this->semValue);
     }
 
     protected function reduceRule98() {
@@ -1370,14 +1364,7 @@ class Php7 extends \PhpParser\ParserAbstract
     }
 
     protected function reduceRule138() {
-
-        if ($this->semStack[$this->stackPos-(3-2)]) {
-            $this->semValue = $this->semStack[$this->stackPos-(3-2)]; $attrs = $this->startAttributeStack[$this->stackPos-(3-1)]; $stmts = $this->semValue; if (!empty($attrs['comments'])) {$stmts[0]->setAttribute('comments', array_merge($attrs['comments'], $stmts[0]->getAttribute('comments', []))); };
-        } else {
-            $startAttributes = $this->startAttributeStack[$this->stackPos-(3-1)]; if (isset($startAttributes['comments'])) { $this->semValue = new Stmt\Nop(['comments' => $startAttributes['comments']]); } else { $this->semValue = null; };
-            if (null === $this->semValue) { $this->semValue = array(); }
-        }
-
+         $this->semValue = $this->semStack[$this->stackPos-(3-2)]; $attrs = $this->startAttributeStack[$this->stackPos-(3-1)]; $stmts = $this->semValue; if (!empty($attrs['comments']) && isset($stmts[0])) {$stmts[0]->setAttribute('comments', array_merge($attrs['comments'], $stmts[0]->getAttribute('comments', []))); };
     }
 
     protected function reduceRule139() {

@@ -33,6 +33,11 @@ class TraceableEventDispatcher implements TraceableEventDispatcherInterface
     private $dispatcher;
     private $wrappedListeners;
 
+    /**
+     * @param EventDispatcherInterface $dispatcher An EventDispatcherInterface instance
+     * @param Stopwatch                $stopwatch  A Stopwatch instance
+     * @param LoggerInterface          $logger     A LoggerInterface instance
+     */
     public function __construct(EventDispatcherInterface $dispatcher, Stopwatch $stopwatch, LoggerInterface $logger = null)
     {
         $this->dispatcher = $dispatcher;
@@ -205,11 +210,6 @@ class TraceableEventDispatcher implements TraceableEventDispatcherInterface
         uasort($notCalled, array($this, 'sortListenersByPriority'));
 
         return $notCalled;
-    }
-
-    public function reset()
-    {
-        $this->called = array();
     }
 
     /**

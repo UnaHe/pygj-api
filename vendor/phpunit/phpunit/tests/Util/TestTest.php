@@ -821,7 +821,7 @@ class TestTest extends TestCase
         );
     }
 
-    public function testTwoCoversDefaultClassAnnotationsAreNotAllowed()
+    public function testTwoCoversDefaultClassAnnoationsAreNotAllowed()
     {
         $this->expectException(CodeCoverageException::class);
 

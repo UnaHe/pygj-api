@@ -71,7 +71,6 @@ class ArraySubsetTest extends TestCase
     public function testEvaluateFailMessage()
     {
         $constraint = new ArraySubset(['foo' => 'bar']);
-
         try {
             $constraint->evaluate(['baz' => 'bar'], '', false);
             $this->fail(\sprintf('Expected %s to be thrown.', ExpectationFailedException::class));

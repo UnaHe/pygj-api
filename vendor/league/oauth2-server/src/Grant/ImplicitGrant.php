@@ -27,18 +27,11 @@ class ImplicitGrant extends AbstractAuthorizeGrant
     private $accessTokenTTL;
 
     /**
-     * @var string
-     */
-    private $queryDelimiter;
-
-    /**
      * @param \DateInterval $accessTokenTTL
-     * @param string $queryDelimiter
      */
-    public function __construct(\DateInterval $accessTokenTTL, $queryDelimiter = '#')
+    public function __construct(\DateInterval $accessTokenTTL)
     {
         $this->accessTokenTTL = $accessTokenTTL;
-        $this->queryDelimiter = $queryDelimiter;
     }
 
     /**
@@ -102,7 +95,7 @@ class ImplicitGrant extends AbstractAuthorizeGrant
     public function canRespondToAuthorizationRequest(ServerRequestInterface $request)
     {
         return (
-            isset($request->getQueryParams()['response_type'])
+            array_key_exists('response_type', $request->getQueryParams())
             && $request->getQueryParams()['response_type'] === 'token'
             && isset($request->getQueryParams()['client_id'])
         );
@@ -149,22 +142,17 @@ class ImplicitGrant extends AbstractAuthorizeGrant
                 $this->getEmitter()->emit(new RequestEvent(RequestEvent::CLIENT_AUTHENTICATION_FAILED, $request));
                 throw OAuthServerException::invalidClient();
             }
-        } elseif (is_array($client->getRedirectUri()) && count($client->getRedirectUri()) !== 1
-            || empty($client->getRedirectUri())
-        ) {
-            $this->getEmitter()->emit(new RequestEvent(RequestEvent::CLIENT_AUTHENTICATION_FAILED, $request));
-            throw OAuthServerException::invalidClient();
         }
 
         $scopes = $this->validateScopes(
-            $this->getQueryStringParameter('scope', $request, $this->defaultScope),
+            $this->getQueryStringParameter('scope', $request),
             is_array($client->getRedirectUri())
                 ? $client->getRedirectUri()[0]
                 : $client->getRedirectUri()
         );
 
         // Finalize the requested scopes
-        $finalizedScopes = $this->scopeRepository->finalizeScopes(
+        $scopes = $this->scopeRepository->finalizeScopes(
             $scopes,
             $this->getIdentifier(),
             $client
@@ -177,7 +165,7 @@ class ImplicitGrant extends AbstractAuthorizeGrant
         $authorizationRequest->setClient($client);
         $authorizationRequest->setRedirectUri($redirectUri);
         $authorizationRequest->setState($stateParameter);
-        $authorizationRequest->setScopes($finalizedScopes);
+        $authorizationRequest->setScopes($scopes);
 
         return $authorizationRequest;
     }
@@ -212,11 +200,11 @@ class ImplicitGrant extends AbstractAuthorizeGrant
                     $finalRedirectUri,
                     [
                         'access_token' => (string) $accessToken->convertToJWT($this->privateKey),
-                        'token_type'   => 'Bearer',
+                        'token_type'   => 'bearer',
                         'expires_in'   => $accessToken->getExpiryDateTime()->getTimestamp() - (new \DateTime())->getTimestamp(),
                         'state'        => $authorizationRequest->getState(),
                     ],
-                    $this->queryDelimiter
+                    '#'
                 )
             );
 

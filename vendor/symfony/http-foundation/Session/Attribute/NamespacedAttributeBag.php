@@ -19,6 +19,11 @@ namespace Symfony\Component\HttpFoundation\Session\Attribute;
  */
 class NamespacedAttributeBag extends AttributeBag
 {
+    /**
+     * Namespace character.
+     *
+     * @var string
+     */
     private $namespaceCharacter;
 
     /**
