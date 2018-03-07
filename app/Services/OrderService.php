@@ -435,8 +435,11 @@ class OrderService{
             }
             DB::commit();
 
-            // 存入收益统计队列.
-            Redis::lpush('manager:queue:complate_order_info', $redisParamsJson);
+            if ($newCodeType == -1) {
+                // 升级终身码,存入注册列表.
+                Redis::lPush('manager:queue:complate_order_info', $redisParamsJson);
+                Redis::hSet('manager:hash:reginvitereluser:'.$codeUserId, $newCode, 1);
+            }
         }catch (\Exception $e){
             DB::rollBack();
             $error = $e instanceof \LogicException ? $e->getMessage() : '升级失败';
