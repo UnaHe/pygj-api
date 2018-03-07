@@ -394,7 +394,7 @@ class UserService{
         $OrderProcess = new OrderProcess();
 
         foreach ($data as $k => $v) {
-            if($v['status'] === -1){
+            if($v['status'] == -1){
                 $data[$k]['remark'] = $OrderProcess->where('order_id', $v['id'])->orderBy('created_at', 'desc')->pluck('remark')->first();
             }
             $data[$k]['subtype'] = Order::$order_subtype[$v['subtype']];

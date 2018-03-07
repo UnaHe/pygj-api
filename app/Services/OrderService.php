@@ -771,7 +771,7 @@ class OrderService{
         $OrderProcess = new OrderProcess();
 
         foreach ($data as $k => $v) {
-            if($v['status'] === -1){
+            if($v['status'] == -1){
                 $data[$k]['remark'] = $OrderProcess->where('order_id', $v['id'])->orderBy('created_at', 'desc')->pluck('remark')->first();
             }
 //            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[99];
@@ -884,10 +884,10 @@ class OrderService{
         $OrderProcess = new OrderProcess();
 
         foreach ($data as $k => $v) {
-            if($v['status'] === -1){
+            if($v['status'] == -1){
                 $data[$k]['remark'] = $OrderProcess->where('order_id', $v['id'])->orderBy('created_at', 'desc')->pluck('remark')->first();
             }
-            if($v['subtype'] === 16){
+            if($v['subtype'] == 16 && $v['status'] == 99){
                 $data[$k]['bhbk'] = $this->ordersReceivingNum($userId, $v['id']);
             }
 //            $data[$k]['status'] = isset(Order::$order_status[$v['status']]) ? Order::$order_status[$v['status']] : Order::$order_status[98];
