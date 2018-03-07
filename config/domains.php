@@ -24,5 +24,9 @@ return [
      * 微信单页域名列表
      */
     'wechat_domains' => $domains,
+    /**
+     * 朋友管家域名
+     */
+    'pygj_domains' => env('PYGJ_DOMAINS'),
 
 ];

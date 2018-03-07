@@ -17,6 +17,7 @@ class SysConfigService
      * @param $key
      * @param null $default
      * @return null
+     * @throws \Exception
      */
     public function get($key, $default=null){
         if(!$value = CacheHelper::getCache([$key])){

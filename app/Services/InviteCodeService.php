@@ -7,19 +7,33 @@
  */
 namespace App\Services;
 
+use App\Helpers\CacheHelper;
 use App\Models\InviteCode;
+use App\Models\User;
+use App\Models\Order;
+use App\Models\CodePrice;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 
 class InviteCodeService{
     /**
      * 获取未使用的邀请码数量
      * @param $userId
      * @return mixed
+     * @throws \Exception
      */
     public function getUnUseInviteCodeNum($userId){
-        return InviteCode::where([
+        if($data = CacheHelper::getCache()){
+            return $data;
+        }
+
+        $data = InviteCode::where([
             'user_id' => $userId,
             'status' => InviteCode::STATUS_UNUSE
         ])->count();
+        CacheHelper::setCache($data, 1);
+
+        return $data;
     }
 
     /**
@@ -28,9 +42,7 @@ class InviteCodeService{
      * @return mixed
      */
     public function getListByUserId($userId){
-        $inviteCodes =  InviteCode::where([
-            'user_id' => $userId
-        ])->select(["invite_code", "status"])->orderBy("status","asc")->get();
+        $inviteCodes = InviteCode::where('user_id', $userId)->select(["invite_code", "status"])->orderBy("status","asc")->get();
 
         foreach ($inviteCodes as &$inviteCode){
             if($inviteCode['status'] == InviteCode::STATUS_UNUSE){
@@ -38,6 +50,47 @@ class InviteCodeService{
             }
         }
         return $inviteCodes;
+    }
+
+    /**
+     * 派发邀请码列表
+     * @param $userId
+     * @return mixed
+     */
+    public function sendInviteList($userId){
+        // 查询可用邀请码.
+        $data = InviteCode::where([
+            'user_id' => $userId,
+            'status' => InviteCode::STATUS_UNUSE
+        ])->select(['effective_days','invite_code', 'code_type'])->get();
+
+        $result = [];
+        foreach($data as $k=>$v){
+            if($v['code_type'] !== 0){
+                $result[1][] = $v['invite_code'];
+            }else{
+                $result[$v['effective_days']][] = $v['invite_code'];
+            }
+        }
+
+        $num = 0;
+        $str = '';
+        $res = [];
+        $kk = 0;
+        foreach($result as $k=>$v){
+            foreach($v as $key=>$vel){
+                $num++;
+                $str .= $vel.',';
+            }
+            $res[$kk]['effective_days'] = $k;
+            $res[$kk]['invite_code'] = rtrim($str, ',');
+            $res[$kk]['num'] = $num;
+            $str = '';
+            $num = 0;
+            $kk++;
+        }
+
+        return $res;
     }
 
 }

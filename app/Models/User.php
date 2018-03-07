@@ -34,6 +34,7 @@ class User extends Authenticatable
      * passport查找用户
      * @param $login
      * @return mixed
+     * @throws OAuthServerException
      */
     public function findForPassport($login){
         $user = $this->where('phone', $login)->first();
@@ -45,4 +46,21 @@ class User extends Authenticatable
         }
         return $user;
     }
+
+    /**
+     * 获得与用户关联信息.
+     */
+    public function UserInfo()
+    {
+        return $this->hasOne('App\Models\UserInfo', 'user_id', 'id')->select('id', 'user_id', 'actual_name', 'wechat_id', 'taobao_id', 'id_card', 'alipay_id');
+    }
+
+    /**
+     * 获得与用户等级信息.
+     */
+    public function UserGrade()
+    {
+        return $this->hasOne('App\Models\UserGrade', 'user_id', 'id')->select('id', 'user_id', 'user_grade', 'user_next_grade', 'invitecode_total', 'upgrade_invitecode_num');
+    }
+
 }
